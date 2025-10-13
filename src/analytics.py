@@ -11,14 +11,16 @@ from typing import Any, Dict, Iterable, List, Optional, Sequence, Tuple
 
 import requests
 
+from src.coins import get_top_market_tokens
+
 ALL_POOLS_URL = "https://yields.llama.fi/pools"
 CHART_URL_TEMPLATE = "https://yields.llama.fi/chart/{pool_id}"
 PROTOCOL_URL_TEMPLATE = "https://api.llama.fi/protocol/{slug}"
-ALL_POOLS_CACHE_TTL = timedelta(minutes=30)
 CHART_CACHE_TTL = timedelta(minutes=30)
 PROJECT_URL_CACHE_TTL = timedelta(hours=1)
 CHART_FETCH_WORKERS = 8
 CANDIDATE_MULTIPLIER = 4
+TOKEN_SEARCH_CACHE_TTL = timedelta(minutes=5)
 
 MOMENTUM_TVL_WEIGHT = 0.6
 MOMENTUM_APY_WEIGHT = 0.4
@@ -62,36 +64,13 @@ class CacheEntry:
     data: Any
 
 
-_all_pools_cache: Optional[CacheEntry] = None
 _chart_cache: Dict[str, CacheEntry] = {}
 _project_url_cache: Dict[str, CacheEntry] = {}
+_token_search_cache: Dict[str, CacheEntry] = {}
 
 
 def _utcnow() -> datetime:
     return datetime.now(timezone.utc)
-
-
-def _fetch_all_pools() -> List[Dict[str, Any]]:
-    response = requests.get(ALL_POOLS_URL, timeout=30)
-    response.raise_for_status()
-    payload = response.json()
-    data = payload.get("data")
-    if not isinstance(data, list):
-        raise RuntimeError("Unexpected response from DeFiLlama pools endpoint")
-    return data
-
-
-def get_all_pools(force_refresh: bool = False) -> List[Dict[str, Any]]:
-    """Return cached list of all pools from DeFiLlama."""
-    global _all_pools_cache
-    now = _utcnow()
-
-    if not force_refresh and _all_pools_cache and now - _all_pools_cache.fetched_at < ALL_POOLS_CACHE_TTL:
-        return _all_pools_cache.data  # type: ignore[return-value]
-
-    pools = _fetch_all_pools()
-    _all_pools_cache = CacheEntry(fetched_at=now, data=pools)
-    return pools
 
 
 def _fetch_chart(pool_id: str) -> List[Dict[str, Any]]:
@@ -114,6 +93,28 @@ def get_chart(pool_id: str, force_refresh: bool = False) -> List[Dict[str, Any]]
     chart = _fetch_chart(pool_id)
     _chart_cache[pool_id] = CacheEntry(fetched_at=now, data=chart)
     return chart
+
+
+def get_token_pools(symbol: str, force_refresh: bool = False) -> List[Dict[str, Any]]:
+    token = symbol.upper()
+    now = _utcnow()
+    entry = _token_search_cache.get(token)
+    if entry and not force_refresh and now - entry.fetched_at < TOKEN_SEARCH_CACHE_TTL:
+        return entry.data
+
+    params = {"search": token}
+    try:
+        response = requests.get(ALL_POOLS_URL, params=params, timeout=20)
+        response.raise_for_status()
+        payload = response.json()
+        data = payload.get("data", [])
+        if not isinstance(data, list):
+            data = []
+    except requests.RequestException:
+        data = []
+
+    _token_search_cache[token] = CacheEntry(fetched_at=now, data=data)
+    return data
 
 
 def get_project_url(project: Optional[str]) -> Optional[str]:
@@ -225,10 +226,7 @@ def _filter_by_symbols(tokens: Sequence[str], tracked: Sequence[str]) -> bool:
     if not tracked:
         return True
     upper_tokens = {token.upper() for token in tokens}
-    for item in tracked:
-        if item.upper() in upper_tokens:
-            return True
-    return False
+    return any(item.upper() in upper_tokens for item in tracked)
 
 
 def _filter_by_chain(chain: str, chains: Sequence[str]) -> bool:
@@ -238,44 +236,49 @@ def _filter_by_chain(chain: str, chains: Sequence[str]) -> bool:
 
 
 def _get_new_pool_candidates(
+    symbols: Sequence[str],
     period_days: int,
     min_tvl: float,
-    symbols: Sequence[str],
     chains: Sequence[str],
     force_refresh: bool,
 ) -> List[Dict[str, Any]]:
-    all_pools = get_all_pools(force_refresh=force_refresh)
+    allowed_symbols = {token["symbol"].upper() for token in get_top_market_tokens(limit=100)}
+    requested_symbols = [symbol.upper() for symbol in symbols]
+    if not requested_symbols:
+        raise ValueError("At least one symbol must be provided")
+
+    tokens_to_fetch = [symbol for symbol in requested_symbols if symbol in allowed_symbols]
+    if not tokens_to_fetch:
+        raise ValueError("Symbols must be from the top-100 list")
+
     result: Dict[Tuple[str, str], Dict[str, Any]] = {}
 
-    for pool in all_pools:
-        tvl = float(pool.get("tvlUsd") or 0.0)
-        if tvl < min_tvl:
-            continue
+    for symbol in tokens_to_fetch:
+        pools = get_token_pools(symbol, force_refresh=force_refresh)
+        for pool in pools:
+            tvl = float(pool.get("tvlUsd") or 0.0)
+            if tvl < min_tvl:
+                continue
 
-        count = pool.get("count")
-        if not isinstance(count, (int, float)):
-            continue
+            count = pool.get("count")
+            if not isinstance(count, (int, float)) or count > period_days + 1:
+                continue
 
-        # heuristic: each count ~ one day
-        if count > period_days + 1:
-            continue
+            pair_symbol = pool.get("symbol") or ""
+            tokens = _parse_tokens(pair_symbol)
+            if not _filter_by_symbols(tokens, requested_symbols):
+                continue
 
-        symbol = pool.get("symbol") or ""
-        tokens = _parse_tokens(symbol)
-        if not _filter_by_symbols(tokens, symbols):
-            continue
+            chain = pool.get("chain") or ""
+            if not _filter_by_chain(chain, chains):
+                continue
 
-        chain = pool.get("chain") or ""
-        if not _filter_by_chain(chain, chains):
-            continue
+            norm_pair = normalize_pair(pair_symbol)
+            key = (pool.get("project") or "", norm_pair)
 
-        norm_pair = normalize_pair(symbol)
-        key = (pool.get("project") or "", norm_pair)
-
-        # remove duplicates by keeping higher TVL
-        stored = result.get(key)
-        if not stored or tvl > stored.get("tvlUsd", 0):
-            result[key] = pool
+            stored = result.get(key)
+            if not stored or tvl > stored.get("tvlUsd", 0):
+                result[key] = pool
 
     return list(result.values())
 
@@ -336,14 +339,17 @@ def get_new_pools(
     if period_key not in period_map:
         raise ValueError("Unsupported period")
 
+    if not symbols:
+        raise ValueError("At least one symbol must be provided")
+
     days = period_map[period_key]
     min_tvl = float(min_tvl)
     limit = max(1, min(limit, 200))
 
     candidates = _get_new_pool_candidates(
+        symbols=symbols,
         period_days=days,
         min_tvl=min_tvl,
-        symbols=symbols,
         chains=chains,
         force_refresh=force_refresh,
     )

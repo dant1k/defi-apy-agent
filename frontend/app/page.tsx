@@ -117,6 +117,7 @@ export default function HomePage(): JSX.Element {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [response, setResponse] = useState<ApiResponse | null>(null);
+  const [activeView, setActiveView] = useState<"strategies" | "analytics">("strategies");
   const [isChainModalOpen, setChainModalOpen] = useState(false);
   const [isTokenModalOpen, setTokenModalOpen] = useState(false);
   const [tokenOptions, setTokenOptions] = useState<TokenOption[]>(FALLBACK_TOKENS);
@@ -228,6 +229,10 @@ export default function HomePage(): JSX.Element {
   ];
 
   async function loadAnalytics(customSort?: string) {
+    if (analyticsTokens.length === 0) {
+      setAnalyticsError("Выберите хотя бы один тикер из топ-100");
+      return;
+    }
     setAnalyticsLoading(true);
     setAnalyticsError(null);
     try {
@@ -305,10 +310,28 @@ export default function HomePage(): JSX.Element {
 
   return (
     <section className="page">
-      <form className="form" onSubmit={handleSubmit}>
-        <div className="grid-row">
-          <div className="form-row">
-            <label>Токен</label>
+      <div className="view-switcher">
+        <button
+          type="button"
+          className={activeView === "strategies" ? "active" : ""}
+          onClick={() => setActiveView("strategies")}
+        >
+          Поиск стратегий
+        </button>
+        <button
+          type="button"
+          className={activeView === "analytics" ? "active" : ""}
+          onClick={() => setActiveView("analytics")}
+        >
+          Новые пулы
+        </button>
+      </div>
+
+      {activeView === "strategies" && (
+        <form className="form" onSubmit={handleSubmit}>
+          <div className="grid-row">
+            <div className="form-row">
+              <label>Токен</label>
             <div className="multi-select single">
               <button
                 type="button"
@@ -386,15 +409,17 @@ export default function HomePage(): JSX.Element {
 
         </div>
 
-        <button className="submit" type="submit" disabled={isLoading}>
+        <button className="submit" type="submit" disabled={isLoading || !form.token}>
           {isLoading ? "Ищем стратегии..." : "Найти стратегии"}
         </button>
       </form>
+      )}
 
-      {error && <div className="error-card">⚠️ {error}</div>}
+      {activeView === "strategies" && error && <div className="error-card">⚠️ {error}</div>}
 
-      {response && <ResultsCard response={response} />}
+      {activeView === "strategies" && response && <ResultsCard response={response} />}
 
+      {activeView === "analytics" && (
       <div className="analytics-panel">
         <header className="analytics-header">
           <h2>Новые DeFi пулы</h2>
@@ -478,14 +503,18 @@ export default function HomePage(): JSX.Element {
         </div>
 
         <div className="analytics-actions">
-          <button type="button" onClick={() => loadAnalytics()} disabled={isAnalyticsLoading}>
+          <button
+            type="button"
+            onClick={() => loadAnalytics()}
+            disabled={isAnalyticsLoading || analyticsTokens.length === 0}
+          >
             {isAnalyticsLoading ? "Загружаем..." : "Показать новые пулы"}
           </button>
           <button
             type="button"
             className="secondary"
             onClick={() => loadAnalytics("momentum")}
-            disabled={isAnalyticsLoading}
+            disabled={isAnalyticsLoading || analyticsTokens.length === 0}
           >
             🔥 Новые трендовые
           </button>
@@ -552,6 +581,7 @@ export default function HomePage(): JSX.Element {
           <div className="empty-state">Пулы не найдены по заданным фильтрам.</div>
         )}
       </div>
+      )}
 
       <SingleSelectionModal
         title="Выбор токена"

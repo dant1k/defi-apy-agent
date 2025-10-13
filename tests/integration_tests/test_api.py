@@ -85,7 +85,7 @@ def test_new_pools_endpoint(monkeypatch) -> None:
 
     monkeypatch.setattr(api, "get_new_pools", lambda *args, **kwargs: payload)
 
-    response = client.get("/analytics/new-pools")
+    response = client.get("/analytics/new-pools?symbols=APT")
     assert response.status_code == 200
     assert response.json() == payload
 

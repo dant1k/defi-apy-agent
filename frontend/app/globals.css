@@ -40,6 +40,27 @@ section.page {
   gap: 24px;
 }
 
+.view-switcher {
+  display: inline-flex;
+  gap: 12px;
+  align-self: flex-start;
+}
+
+.view-switcher button {
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: #9fb0ff;
+  font-weight: 600;
+}
+
+.view-switcher button.active {
+  background: linear-gradient(135deg, #6fa5ff, #86f7ff);
+  color: #0b0f19;
+  border-color: transparent;
+}
+
 .form {
   display: flex;
   flex-direction: column;

@@ -115,7 +115,7 @@ async def get_strategies(payload: StrategyRequest) -> StrategyResponse:
 async def analytics_new_pools(
     period: str = Query("7d", pattern="^(24h|7d|30d)$"),
     min_tvl: float = Query(5_000_000, ge=0),
-    symbols: Optional[List[str]] = Query(None, alias="symbols"),
+    symbols: List[str] = Query(..., alias="symbols", min_items=1),
     chains: Optional[List[str]] = Query(None, alias="chains"),
     sort: str = Query("momentum", pattern="^(momentum|tvl_change|apy_change)$"),
     limit: int = Query(50, ge=1, le=200),
@@ -124,7 +124,7 @@ async def analytics_new_pools(
     data = get_new_pools(
         period,
         min_tvl=min_tvl,
-        symbols=symbols or (),
+        symbols=symbols,
         chains=chains or (),
         sort=sort,
         limit=limit,

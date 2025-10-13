@@ -53,7 +53,8 @@ def test_get_new_pools_returns_sorted(monkeypatch: pytest.MonkeyPatch) -> None:
         },
     ]
 
-    monkeypatch.setattr(analytics, "get_all_pools", lambda force_refresh=False: pools)
+    monkeypatch.setattr(analytics, "get_top_market_tokens", lambda limit=100: [{"symbol": "APT"}, {"symbol": "BTC"}])
+    monkeypatch.setattr(analytics, "get_token_pools", lambda symbol, force_refresh=False: pools if symbol == "APT" else [])
     monkeypatch.setattr(analytics, "get_chart", lambda pool_id, force_refresh=False: build_chart(2, now))
     monkeypatch.setattr(analytics, "get_project_url", lambda project: f"https://{project}.example")
 
@@ -97,13 +98,15 @@ def test_get_new_pools_filters_by_chain(monkeypatch: pytest.MonkeyPatch) -> None
         },
     ]
 
-    monkeypatch.setattr(analytics, "get_all_pools", lambda force_refresh=False: pools)
+    monkeypatch.setattr(analytics, "get_top_market_tokens", lambda limit=100: [{"symbol": "APT"}])
+    monkeypatch.setattr(analytics, "get_token_pools", lambda symbol, force_refresh=False: pools if symbol == "APT" else [])
     monkeypatch.setattr(analytics, "get_chart", lambda pool_id, force_refresh=False: build_chart(1, now))
     monkeypatch.setattr(analytics, "get_project_url", lambda project: None)
 
     result = analytics.get_new_pools(
         period="24h",
         min_tvl=5_000_000,
+        symbols=("APT",),
         chains=("aptos",),
         limit=5,
     )
