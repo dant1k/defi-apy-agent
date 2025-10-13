@@ -118,9 +118,11 @@ export default function HomePage(): JSX.Element {
   const [isTokenModalOpen, setTokenModalOpen] = useState(false);
   const [tokenOptions, setTokenOptions] = useState<TokenOption[]>(FALLBACK_TOKENS);
   const [tokenQuery, setTokenQuery] = useState("");
+  const [analyticsTokenSearch, setAnalyticsTokenSearch] = useState("");
+  const [analyticsChainSearch, setAnalyticsChainSearch] = useState("");
   const [isAnalyticsChainModalOpen, setAnalyticsChainModalOpen] = useState(false);
   const [analyticsPeriod, setAnalyticsPeriod] = useState("7d");
-  const [analyticsSort, setAnalyticsSort] = useState("tvl_change");
+  const [analyticsSort, setAnalyticsSort] = useState<"tvl_change" | "apy_change">("tvl_change");
   const [analyticsChains, setAnalyticsChains] = useState<string[]>([]);
   const [analyticsTokens, setAnalyticsTokens] = useState<string[]>([]);
   const [isSymbolModalOpen, setSymbolModalOpen] = useState(false);
@@ -140,6 +142,27 @@ export default function HomePage(): JSX.Element {
         (token.slug ?? "").toLowerCase().includes(q),
     );
   }, [tokenOptions, tokenQuery]);
+
+  const filteredAnalyticsTokens = useMemo(() => {
+    if (!analyticsTokenSearch.trim()) {
+      return tokenOptions;
+    }
+    const q = analyticsTokenSearch.trim().toLowerCase();
+    return tokenOptions.filter(
+      (token) =>
+        token.value.toLowerCase().includes(q) ||
+        token.label.toLowerCase().includes(q) ||
+        (token.slug ?? "").toLowerCase().includes(q),
+    );
+  }, [tokenOptions, analyticsTokenSearch]);
+
+  const filteredAnalyticsChains = useMemo(() => {
+    if (!analyticsChainSearch.trim()) {
+      return chainOptions;
+    }
+    const q = analyticsChainSearch.trim().toLowerCase();
+    return chainOptions.filter((chain) => chain.label.toLowerCase().includes(q));
+  }, [analyticsChainSearch]);
 
   useEffect(() => {
     let cancelled = false;
@@ -211,12 +234,12 @@ export default function HomePage(): JSX.Element {
     }
   }
 
-  const sortOptions: { label: string; value: string }[] = [
+  const sortOptions: { label: string; value: "tvl_change" | "apy_change" }[] = [
     { label: "Рост TVL", value: "tvl_change" },
     { label: "Рост APY", value: "apy_change" },
   ];
 
-  async function loadAnalytics(customSort?: string) {
+  async function loadAnalytics(customSort?: "tvl_change" | "apy_change") {
     if (analyticsTokens.length === 0) {
       setAnalyticsError("Выберите хотя бы один тикер из топ-100");
       return;
@@ -224,7 +247,7 @@ export default function HomePage(): JSX.Element {
     setAnalyticsLoading(true);
     setAnalyticsError(null);
     try {
-      const sortValue = (customSort ?? analyticsSort) as "tvl_change" | "apy_change";
+      const sortValue = customSort ?? analyticsSort;
 
       const params = new URLSearchParams({
         period: analyticsPeriod,
@@ -381,7 +404,9 @@ export default function HomePage(): JSX.Element {
             <select
               id="analyticsSort"
               value={analyticsSort}
-              onChange={(event) => setAnalyticsSort(event.target.value)}
+              onChange={(event) =>
+                setAnalyticsSort(event.target.value as "tvl_change" | "apy_change")
+              }
             >
               {sortOptions.map((option) => (
                 <option key={option.value} value={option.value}>
@@ -396,7 +421,10 @@ export default function HomePage(): JSX.Element {
               <button
                 type="button"
                 className="multiselect-trigger"
-                onClick={() => setAnalyticsChainModalOpen(true)}
+                onClick={() => {
+                  setAnalyticsChainSearch("");
+                  setAnalyticsChainModalOpen(true);
+                }}
               >
                 {analyticsChains.length ? `Выбрано: ${analyticsChains.length}` : "Выбрать сети"}
               </button>
@@ -414,7 +442,10 @@ export default function HomePage(): JSX.Element {
               <button
                 type="button"
                 className="multiselect-trigger"
-                onClick={() => setSymbolModalOpen(true)}
+                onClick={() => {
+                  setAnalyticsTokenSearch("");
+                  setSymbolModalOpen(true);
+                }}
               >
                 {analyticsTokens.length ? `Выбрано: ${analyticsTokens.length}` : "Выбрать тикеры"}
               </button>
@@ -527,8 +558,10 @@ export default function HomePage(): JSX.Element {
       <SelectionModal
         title="Выбор тикеров для аналитики"
         isOpen={isSymbolModalOpen}
-        options={tokenOptions}
+        options={filteredAnalyticsTokens}
         selected={analyticsTokens}
+        query={analyticsTokenSearch}
+        onQueryChange={setAnalyticsTokenSearch}
         onToggle={(value) =>
           setAnalyticsTokens((prev) =>
             prev.includes(value) ? prev.filter((item) => item !== value) : [...prev, value],
@@ -541,8 +574,10 @@ export default function HomePage(): JSX.Element {
       <SelectionModal
         title="Сети для аналитики"
         isOpen={isAnalyticsChainModalOpen}
-        options={chainOptions}
+        options={filteredAnalyticsChains}
         selected={analyticsChains}
+        query={analyticsChainSearch}
+        onQueryChange={setAnalyticsChainSearch}
         onToggle={(value) =>
           setAnalyticsChains((prev) =>
             prev.includes(value) ? prev.filter((item) => item !== value) : [...prev, value],
@@ -554,13 +589,6 @@ export default function HomePage(): JSX.Element {
 
     </section>
   );
-}
-
-function toggleSelection(values: string[], rawValue: string): string[] {
-  const value = rawValue.toLowerCase();
-  return values.includes(value)
-    ? values.filter((item) => item !== value)
-    : [...values, value];
 }
 
 function ChipGroup({
@@ -593,9 +621,11 @@ type SelectionModalProps = {
   isOpen: boolean;
   options: { value: string; label: string }[];
   selected: string[];
+  query: string;
+  onQueryChange: (value: string) => void;
   onToggle: (value: string) => void;
-  onClear: () => void;
   onClose: () => void;
+  onClear?: () => void;
 };
 
 function SelectionModal({
@@ -603,9 +633,11 @@ function SelectionModal({
   isOpen,
   options,
   selected,
+  query,
+  onQueryChange,
   onToggle,
-  onClear,
   onClose,
+  onClear,
 }: SelectionModalProps) {
   if (!isOpen) {
     return null;
@@ -620,6 +652,14 @@ function SelectionModal({
             ×
           </button>
         </header>
+        <div className="modal-search">
+          <input
+            type="text"
+            placeholder="Поиск по символу или названию"
+            value={query}
+            onChange={(event) => onQueryChange(event.target.value)}
+          />
+        </div>
         <div className="options">
           {options.map((option) => {
             const isSelected = selected.includes(option.value);
@@ -634,11 +674,14 @@ function SelectionModal({
               </label>
             );
           })}
+          {options.length === 0 && <span className="hint">Ничего не найдено</span>}
         </div>
         <footer>
-          <button type="button" className="outlined" onClick={onClear}>
-            Сбросить
-          </button>
+          {onClear && (
+            <button type="button" className="outlined" onClick={onClear}>
+              Сбросить
+            </button>
+          )}
           <button type="button" onClick={onClose}>
             Готово
           </button>
