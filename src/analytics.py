@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import math
-import re
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
@@ -12,6 +11,7 @@ from typing import Any, Dict, Iterable, List, Optional, Sequence, Tuple
 import requests
 
 from src.coins import get_top_market_tokens
+from src.utils.tokens import classify_pair, normalize_pair, parse_tokens
 
 ALL_POOLS_URL = "https://yields.llama.fi/pools"
 CHART_URL_TEMPLATE = "https://yields.llama.fi/chart/{pool_id}"
@@ -24,39 +24,6 @@ TOKEN_SEARCH_CACHE_TTL = timedelta(minutes=5)
 
 MOMENTUM_TVL_WEIGHT = 0.6
 MOMENTUM_APY_WEIGHT = 0.4
-
-STABLE_TOKENS = {
-    "USDT",
-    "USDC",
-    "USDC.E",
-    "USDT.E",
-    "DAI",
-    "BUSD",
-    "TUSD",
-    "FRAX",
-    "USDD",
-    "LUSD",
-    "GUSD",
-    "USDJ",
-    "SUSD",
-    "USDP",
-    "EURC",
-    "EURS",
-    "UST",
-}
-
-WRAPPER_PREFIXES = (
-    "W",
-    "ST",
-    "L",
-    "A",
-    "R",
-    "CB",
-    "WB",
-    "S",
-    "C",
-)
-
 
 @dataclass
 class CacheEntry:
@@ -138,43 +105,6 @@ def get_project_url(project: Optional[str]) -> Optional[str]:
 
     _project_url_cache[key] = CacheEntry(fetched_at=now, data=None)
     return None
-
-
-def _parse_tokens(symbol: str) -> List[str]:
-    tokens = [tok for tok in re.split(r"[^\w]+", (symbol or "").upper()) if tok]
-    return tokens
-
-
-def normalize_pair(symbol: str) -> str:
-    tokens = _parse_tokens(symbol)
-    if not tokens:
-        return symbol.upper()
-    return "-".join(sorted(tokens))
-
-
-def classify_pair(tokens: Sequence[str]) -> str:
-    if not tokens:
-        return "unknown"
-    upper_tokens = [token.upper() for token in tokens]
-    stable_count = sum(token in STABLE_TOKENS for token in upper_tokens)
-    wrapper_count = sum(any(token.startswith(prefix) for prefix in WRAPPER_PREFIXES) for token in upper_tokens)
-    distinct_tokens = len(set(upper_tokens))
-
-    if distinct_tokens == 1:
-        token = upper_tokens[0]
-        if token in STABLE_TOKENS:
-            return "stable-stable"
-        if any(token.startswith(prefix) for prefix in WRAPPER_PREFIXES):
-            return "wrapper-single"
-        return "single"
-
-    if stable_count >= 1 and stable_count < len(upper_tokens):
-        return "token-stable"
-    if wrapper_count >= 1:
-        return "token-wrapper"
-    if stable_count == len(upper_tokens):
-        return "stable-stable"
-    return "mixed"
 
 
 def _find_point(chart: List[Dict[str, Any]], target_time: datetime) -> Optional[Dict[str, Any]]:
@@ -265,7 +195,7 @@ def _get_new_pool_candidates(
                 continue
 
             pair_symbol = pool.get("symbol") or ""
-            tokens = _parse_tokens(pair_symbol)
+            tokens = parse_tokens(pair_symbol)
             if not _filter_by_symbols(tokens, requested_symbols):
                 continue
 
@@ -303,7 +233,7 @@ def _enrich_pool(pool: Dict[str, Any], chart: List[Dict[str, Any]], period_days:
     apy_change = _calculate_change(now_apy, past_apy)
     momentum = _calculate_momentum(tvl_change, apy_change)
 
-    tokens = _parse_tokens(pool.get("symbol") or "")
+    tokens = parse_tokens(pool.get("symbol") or "")
     category = classify_pair(tokens)
     first_seen = _estimate_first_seen(chart)
     action_url = get_project_url(pool.get("project"))

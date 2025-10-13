@@ -92,6 +92,25 @@ section.page {
   font-size: 1rem;
 }
 
+.checkbox-row {
+  flex-direction: row;
+  align-items: center;
+  gap: 12px;
+}
+
+.checkbox {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: #d6e0ff;
+  font-weight: 500;
+}
+
+.checkbox input {
+  width: 18px;
+  height: 18px;
+}
+
 .form-row input:focus,
 .form-row select:focus {
   outline: 2px solid #466dff;

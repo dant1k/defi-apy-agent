@@ -9,6 +9,8 @@ from typing import Any, Dict, Iterable, List, Optional, Tuple
 
 import requests
 
+from src.utils.tokens import classify_pair, contains_wrapper, parse_tokens
+
 API_URL = "https://yields.llama.fi/pools"
 PROTOCOL_URL_TMPL = "https://api.llama.fi/protocol/{slug}"
 TOKEN_CACHE_DURATION = timedelta(minutes=5)
@@ -250,10 +252,16 @@ def _decorate_pool(pool: Dict[str, Any]) -> Dict[str, Any]:
     pool_url = f"https://defillama.com/yields/pool/{pool_id}" if pool_id else None
     protocol_url = _get_protocol_url(pool.get("project"))
 
+    tokens = parse_tokens(pool.get("symbol") or "")
+    category = classify_pair(tokens)
+
     return {
         "platform": pool.get("project"),
         "chain": pool.get("chain"),
         "symbol": pool.get("symbol"),
+        "tokens": tokens,
+        "category": category,
+        "contains_wrapper": contains_wrapper(tokens),
         "apy": float(pool.get("apy") or 0),
         "apy_base": pool.get("apyBase"),
         "apy_reward": pool.get("apyReward"),
@@ -304,6 +312,7 @@ def analyze_strategies(apy_options: List[Dict[str, Any]], user_prefs: Dict[str, 
     max_risk = (user_prefs.get("risk_level") or "высокий").lower()
     preferred_chains = {chain.lower() for chain in user_prefs.get("preferred_chains", [])}
     excluded_protocols = {name.lower() for name in user_prefs.get("exclude_protocols", [])}
+    include_wrappers = bool(user_prefs.get("include_wrappers", True))
 
     max_risk_value = RISK_LEVELS.get(max_risk, RISK_LEVELS["высокий"])
 
@@ -319,6 +328,8 @@ def analyze_strategies(apy_options: List[Dict[str, Any]], user_prefs: Dict[str, 
         if preferred_chains and (pool["chain"] or "").lower() not in preferred_chains:
             return False
         if pool["platform"] and pool["platform"].lower() in excluded_protocols:
+            return False
+        if not include_wrappers and pool.get("contains_wrapper"):
             return False
         return True
 

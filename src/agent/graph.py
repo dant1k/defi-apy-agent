@@ -74,6 +74,8 @@ def _normalize_preferences(
             prefs["min_tvl"] = numeric * 1_000_000 if numeric < 100_000 else numeric
         elif key == "preferred_chains":
             prefs["preferred_chains"] = list(value)
+        elif key == "include_wrappers":
+            prefs["include_wrappers"] = bool(value)
 
     return prefs
 

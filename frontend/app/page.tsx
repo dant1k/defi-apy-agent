@@ -129,6 +129,7 @@ export default function HomePage(): JSX.Element {
   const [analyticsData, setAnalyticsData] = useState<AnalyticsResponse | null>(null);
   const [analyticsError, setAnalyticsError] = useState<string | null>(null);
   const [isAnalyticsLoading, setAnalyticsLoading] = useState(false);
+  const [includeWrappers, setIncludeWrappers] = useState(true);
 
   const filteredTokens = useMemo(() => {
     if (!tokenQuery.trim()) {
@@ -209,6 +210,7 @@ export default function HomePage(): JSX.Element {
         preferences: {
           risk_level: form.riskLevel,
           min_tvl: 1_000_000,
+          include_wrappers: includeWrappers,
         },
       };
 
@@ -367,6 +369,17 @@ export default function HomePage(): JSX.Element {
               ))}
             </select>
           </div>
+        </div>
+
+        <div className="form-row checkbox-row">
+          <label className="checkbox">
+            <input
+              type="checkbox"
+              checked={includeWrappers}
+              onChange={(event) => setIncludeWrappers(event.target.checked)}
+            />
+            <span>Показывать обёрнутые токены (wETH, stETH и т.д.)</span>
+          </label>
         </div>
 
         <button className="submit" type="submit" disabled={isLoading || !form.token}>

@@ -9,6 +9,8 @@ def make_option(
     lockup_days: int,
     tvl_usd: float,
     chain: str = "ethereum",
+    contains_wrapper: bool = False,
+    category: str = "single",
 ) -> dict:
     return {
         "platform": platform,
@@ -17,6 +19,8 @@ def make_option(
         "lockup_days": lockup_days,
         "tvl_usd": tvl_usd,
         "chain": chain,
+        "category": category,
+        "contains_wrapper": contains_wrapper,
         "risk_score": 1.0,
         "risk_reasons": [],
         "stablecoin": False,
@@ -66,3 +70,38 @@ def test_analyze_strategies_respects_filters() -> None:
 
     result = analyze_strategies(options, prefs)
     assert result is None
+
+
+def test_analyze_strategies_excludes_wrappers_when_disabled() -> None:
+    options = [
+        make_option(
+            platform="ProtocolA",
+            apy=8.0,
+            risk_level="средний",
+            lockup_days=0,
+            tvl_usd=10_000_000,
+            contains_wrapper=True,
+            category="token-wrapper",
+        ),
+        make_option(
+            platform="ProtocolB",
+            apy=6.0,
+            risk_level="средний",
+            lockup_days=0,
+            tvl_usd=12_000_000,
+        ),
+    ]
+
+    prefs = {
+        "min_apy": 0.0,
+        "risk_level": "высокий",
+        "max_lockup_days": 365,
+        "min_tvl": 1_000_000,
+        "preferred_chains": [],
+        "include_wrappers": False,
+    }
+
+    result = analyze_strategies(options, prefs)
+    assert result is not None
+    assert result["best"]["platform"] == "ProtocolB"
+    assert result["matched_count"] == 1

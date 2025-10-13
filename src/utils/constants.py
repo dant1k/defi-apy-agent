@@ -8,6 +8,7 @@ DEFAULT_USER_PREFERENCES = {
     "max_lockup_days": 365,
     "min_tvl": 5_000_000,  # в USD
     "preferred_chains": [],
+    "include_wrappers": True,
 }
 
 RISK_DESCRIPTIONS = {

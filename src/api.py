@@ -30,6 +30,9 @@ class PreferencesModel(BaseModel):
     preferred_chains: Optional[list[str]] = Field(
         default=None, description="Предпочитаемые сети (например, ethereum, arbitrum)"
     )
+    include_wrappers: Optional[bool] = Field(
+        default=True, description="Учитывать обёрнутые токены (wETH, stETH и т.д.)"
+    )
 
     @field_validator("risk_level")
     def _validate_risk_level(cls, value: Optional[str]) -> Optional[str]:
