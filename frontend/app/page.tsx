@@ -103,10 +103,7 @@ const FALLBACK_TOKENS: TokenOption[] = [
 
 const DEFAULT_FORM = {
   token: "ETH",
-  minApy: "4",
   riskLevel: "средний" as RiskLevel,
-  minTvl: "5",
-  preferredChains: ["ethereum"],
 };
 
 const API_BASE_URL =
@@ -118,14 +115,12 @@ export default function HomePage(): JSX.Element {
   const [error, setError] = useState<string | null>(null);
   const [response, setResponse] = useState<ApiResponse | null>(null);
   const [activeView, setActiveView] = useState<"strategies" | "analytics">("strategies");
-  const [isChainModalOpen, setChainModalOpen] = useState(false);
   const [isTokenModalOpen, setTokenModalOpen] = useState(false);
   const [tokenOptions, setTokenOptions] = useState<TokenOption[]>(FALLBACK_TOKENS);
   const [tokenQuery, setTokenQuery] = useState("");
   const [isAnalyticsChainModalOpen, setAnalyticsChainModalOpen] = useState(false);
   const [analyticsPeriod, setAnalyticsPeriod] = useState("7d");
-  const [analyticsMinTvl, setAnalyticsMinTvl] = useState("5");
-  const [analyticsSort, setAnalyticsSort] = useState("momentum");
+  const [analyticsSort, setAnalyticsSort] = useState("tvl_change");
   const [analyticsChains, setAnalyticsChains] = useState<string[]>([]);
   const [analyticsTokens, setAnalyticsTokens] = useState<string[]>([]);
   const [isSymbolModalOpen, setSymbolModalOpen] = useState(false);
@@ -133,7 +128,6 @@ export default function HomePage(): JSX.Element {
   const [analyticsError, setAnalyticsError] = useState<string | null>(null);
   const [isAnalyticsLoading, setAnalyticsLoading] = useState(false);
 
-  const preferredChains = useMemo(() => [...form.preferredChains], [form.preferredChains]);
   const filteredTokens = useMemo(() => {
     if (!tokenQuery.trim()) {
       return tokenOptions;
@@ -187,16 +181,11 @@ export default function HomePage(): JSX.Element {
     setResponse(null);
 
     try {
-      const minApy = parseFloat(form.minApy);
-      const minTvl = parseFloat(form.minTvl);
-
       const payload = {
         token: form.token,
         preferences: {
-          min_apy: Number.isFinite(minApy) ? minApy : 0,
           risk_level: form.riskLevel,
-          min_tvl: Number.isFinite(minTvl) ? minTvl : 0,
-          preferred_chains: preferredChains,
+          min_tvl: 1_000_000,
         },
       };
 
@@ -223,7 +212,6 @@ export default function HomePage(): JSX.Element {
   }
 
   const sortOptions: { label: string; value: string }[] = [
-    { label: "Momentum", value: "momentum" },
     { label: "Рост TVL", value: "tvl_change" },
     { label: "Рост APY", value: "apy_change" },
   ];
@@ -236,13 +224,11 @@ export default function HomePage(): JSX.Element {
     setAnalyticsLoading(true);
     setAnalyticsError(null);
     try {
-      const minTvlMillions = parseFloat(analyticsMinTvl);
-      const minTvlValue = Number.isFinite(minTvlMillions) ? minTvlMillions * 1_000_000 : 5_000_000;
-      const sortValue = (customSort ?? analyticsSort) as "momentum" | "tvl_change" | "apy_change";
+      const sortValue = (customSort ?? analyticsSort) as "tvl_change" | "apy_change";
 
       const params = new URLSearchParams({
         period: analyticsPeriod,
-        min_tvl: String(minTvlValue),
+        min_tvl: String(1_000_000),
         sort: sortValue,
         limit: "30",
       });
@@ -329,9 +315,9 @@ export default function HomePage(): JSX.Element {
 
       {activeView === "strategies" && (
         <form className="form" onSubmit={handleSubmit}>
-          <div className="grid-row">
-            <div className="form-row">
-              <label>Токен</label>
+        <div className="grid-row">
+          <div className="form-row">
+            <label>Токен</label>
             <div className="multi-select single">
               <button
                 type="button"
@@ -341,18 +327,6 @@ export default function HomePage(): JSX.Element {
                 {form.token || "Выбрать токен"}
               </button>
             </div>
-          </div>
-          <div className="form-row">
-            <label htmlFor="minApy">Мин. APY (%)</label>
-            <input
-              id="minApy"
-              type="number"
-              inputMode="decimal"
-              step="0.1"
-              min="0"
-              value={form.minApy}
-              onChange={(e) => setForm((prev) => ({ ...prev, minApy: e.target.value }))}
-            />
           </div>
           <div className="form-row">
             <label htmlFor="riskLevel">Уровень риска</label>
@@ -370,43 +344,6 @@ export default function HomePage(): JSX.Element {
               ))}
             </select>
           </div>
-        </div>
-
-        <div className="grid-row">
-          <div className="form-row">
-            <label htmlFor="minTvl">Мин. TVL (млн USD)</label>
-            <input
-              id="minTvl"
-              type="number"
-              inputMode="decimal"
-              min="0"
-              step="0.1"
-              value={form.minTvl}
-              onChange={(e) => setForm((prev) => ({ ...prev, minTvl: e.target.value }))}
-            />
-          </div>
-          <div className="form-row">
-            <label>Предпочитаемые сети</label>
-            <div className="multi-select">
-              <button
-                type="button"
-                className="multiselect-trigger"
-                onClick={() => setAnalyticsChainModalOpen(true)}
-              >
-                {preferredChains.length ? `Выбрано: ${preferredChains.length}` : "Выбрать сети"}
-              </button>
-              <ChipGroup
-                items={preferredChains}
-                onRemove={(value) =>
-                  setForm((prev) => ({
-                    ...prev,
-                    preferredChains: prev.preferredChains.filter((item) => item !== value),
-                  }))
-                }
-              />
-            </div>
-          </div>
-
         </div>
 
         <button className="submit" type="submit" disabled={isLoading || !form.token}>
@@ -440,17 +377,6 @@ export default function HomePage(): JSX.Element {
             </select>
           </div>
           <div className="form-row">
-            <label htmlFor="analyticsMinTvl">Мин. TVL (млн USD)</label>
-            <input
-              id="analyticsMinTvl"
-              type="number"
-              min="0"
-              step="0.5"
-              value={analyticsMinTvl}
-              onChange={(event) => setAnalyticsMinTvl(event.target.value)}
-            />
-          </div>
-          <div className="form-row">
             <label htmlFor="analyticsSort">Сортировка</label>
             <select
               id="analyticsSort"
@@ -470,7 +396,7 @@ export default function HomePage(): JSX.Element {
               <button
                 type="button"
                 className="multiselect-trigger"
-                onClick={() => setChainModalOpen(true)}
+                onClick={() => setAnalyticsChainModalOpen(true)}
               >
                 {analyticsChains.length ? `Выбрано: ${analyticsChains.length}` : "Выбрать сети"}
               </button>
@@ -513,7 +439,7 @@ export default function HomePage(): JSX.Element {
           <button
             type="button"
             className="secondary"
-            onClick={() => loadAnalytics("momentum")}
+            onClick={() => loadAnalytics("tvl_change")}
             disabled={isAnalyticsLoading || analyticsTokens.length === 0}
           >
             🔥 Новые трендовые
@@ -626,20 +552,6 @@ export default function HomePage(): JSX.Element {
         onClear={() => setAnalyticsChains([])}
       />
 
-      <SelectionModal
-        title="Предпочитаемые сети"
-        isOpen={isChainModalOpen}
-        options={chainOptions}
-        selected={preferredChains}
-        onToggle={(value) =>
-          setForm((prev) => ({
-            ...prev,
-            preferredChains: toggleSelection(prev.preferredChains, value),
-          }))
-        }
-        onClose={() => setChainModalOpen(false)}
-        onClear={() => setForm((prev) => ({ ...prev, preferredChains: [] }))}
-      />
     </section>
   );
 }
