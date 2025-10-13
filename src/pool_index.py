@@ -58,8 +58,11 @@ class PoolIndex:
 POOL_INDEX = PoolIndex()
 
 
-def preload_index() -> None:
-    try:
-        POOL_INDEX.ensure_loaded()
-    except Exception:
-        pass
+def start_preload_index() -> None:
+    def worker() -> None:
+        try:
+            POOL_INDEX.ensure_loaded()
+        except Exception:
+            pass
+
+    threading.Thread(target=worker, daemon=True).start()

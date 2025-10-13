@@ -43,20 +43,38 @@ def _fetch_pools_for_token(token: str, limit: int) -> List[Dict[str, Any]]:
     data = POOL_INDEX.get_pools(token)
     if data:
         if limit:
-            data = data[:limit]
+            return data[:limit]
         return data
 
-    params = {"search": token}
+    def fetch(params: Dict[str, Any]) -> List[Dict[str, Any]]:
+        try:
+            response = requests.get(API_URL, params=params, timeout=20)
+            response.raise_for_status()
+            payload = response.json()
+            return (payload or {}).get("data", [])
+        except requests.RequestException:
+            return []
+
+    # Try exact symbol lookup first (fast, small payload)
+    exact = fetch({"symbol": token})
+    if exact:
+        return exact[:limit] if limit else exact
+
+    search_params: Dict[str, Any] = {"search": token}
     if limit:
-        params["limit"] = str(limit)
-    try:
-        response = requests.get(API_URL, params=params, timeout=20)
-        response.raise_for_status()
-        payload = response.json()
-        data = (payload or {}).get("data", [])
-    except requests.RequestException:
-        data = []
-    return data
+        search_params["limit"] = str(limit * 2)
+    results = fetch(search_params)
+
+    filtered: List[Dict[str, Any]] = []
+    token_upper = token.upper()
+    for pool in results:
+        symbol = pool.get("symbol") or ""
+        tokens = parse_tokens(symbol)
+        if token_upper in tokens:
+            filtered.append(pool)
+            if limit and len(filtered) >= limit:
+                break
+    return filtered
 
 
 def _ensure_token_cache(token: str, limit: int, force_refresh: bool = False) -> List[Dict[str, Any]]:

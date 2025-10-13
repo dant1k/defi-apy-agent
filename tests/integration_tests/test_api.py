@@ -7,7 +7,7 @@ from src import api
 
 @pytest.fixture(autouse=True)
 def mock_pool_index(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr(api, "preload_index", lambda: None)
+    monkeypatch.setattr(api, "start_preload_index", lambda: None)
     monkeypatch.setattr("src.pool_index.POOL_INDEX.ensure_loaded", lambda force=False: None)
     monkeypatch.setattr("src.pool_index.POOL_INDEX.get_pools", lambda token: [])
 
