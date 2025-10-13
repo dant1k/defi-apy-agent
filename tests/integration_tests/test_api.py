@@ -1,7 +1,15 @@
+import pytest
 from fastapi.testclient import TestClient
 
 from agent.graph import graph  # noqa: F401  # ensure graph is importable
 from src import api
+
+
+@pytest.fixture(autouse=True)
+def mock_pool_index(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(api, "preload_index", lambda: None)
+    monkeypatch.setattr("src.pool_index.POOL_INDEX.ensure_loaded", lambda force=False: None)
+    monkeypatch.setattr("src.pool_index.POOL_INDEX.get_pools", lambda token: [])
 
 
 def test_health_endpoint() -> None:

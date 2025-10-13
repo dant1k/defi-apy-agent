@@ -9,6 +9,7 @@ from typing import Any, Dict, Iterable, List, Optional, Tuple
 
 import requests
 
+from src.pool_index import POOL_INDEX
 from src.utils.tokens import classify_pair, contains_wrapper, parse_tokens
 
 API_URL = "https://yields.llama.fi/pools"
@@ -39,29 +40,10 @@ _token_cache: Dict[str, TokenPoolCache] = {}
 
 
 def _fetch_pools_for_token(token: str, limit: int) -> List[Dict[str, Any]]:
-    params = {"search": token}
+    data = POOL_INDEX.get_pools(token)
     if limit:
-        params["limit"] = str(limit)
-
-    try:
-        response = requests.get(API_URL, params=params, timeout=20)
-        response.raise_for_status()
-        payload = response.json()
-    except requests.RequestException as exc:
-        raise APIError(f"Не удалось получить данные для токена {token}: {exc}") from exc
-
-    data = (payload or {}).get("data", [])
-    if data:
-        return data
-
-    # fallback на символ, если поиск ничего не вернул
-    try:
-        response = requests.get(API_URL, params={"symbol": token}, timeout=20)
-        response.raise_for_status()
-        payload = response.json()
-        return (payload or {}).get("data", [])
-    except requests.RequestException:
-        return []
+        data = data[:limit]
+    return data
 
 
 def _ensure_token_cache(token: str, limit: int, force_refresh: bool = False) -> List[Dict[str, Any]]:

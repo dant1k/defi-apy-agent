@@ -11,6 +11,7 @@ from pydantic import BaseModel, Field, field_validator
 from src.analytics import get_new_pools
 from src.app import run_agent
 from src.coins import get_top_market_tokens
+from src.pool_index import preload_index
 from src.utils.constants import SUPPORTED_RISK_LEVELS
 
 
@@ -85,6 +86,11 @@ app.add_middleware(
 @app.get("/health")
 async def health_check() -> Dict[str, str]:
     return {"status": "ok"}
+
+
+@app.on_event("startup")
+async def startup_event() -> None:
+    preload_index()
 
 
 @app.get("/tokens")
