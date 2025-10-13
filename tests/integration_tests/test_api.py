@@ -11,6 +11,21 @@ def test_health_endpoint() -> None:
     assert response.json() == {"status": "ok"}
 
 
+def test_tokens_endpoint(monkeypatch) -> None:
+    client = TestClient(api.app)
+
+    sample_tokens = [
+        {"symbol": "BTC", "name": "Bitcoin", "slug": "bitcoin"},
+        {"symbol": "ETH", "name": "Ethereum", "slug": "ethereum"},
+    ]
+
+    monkeypatch.setattr(api, "get_top_market_tokens", lambda limit=100, force_refresh=False: sample_tokens)
+
+    response = client.get("/tokens")
+    assert response.status_code == 200
+    assert response.json() == {"tokens": sample_tokens}
+
+
 def test_strategy_endpoint_success(monkeypatch) -> None:
     client = TestClient(api.app)
 

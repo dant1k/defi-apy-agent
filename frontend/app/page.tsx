@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 
 type RiskLevel = "низкий" | "средний" | "высокий";
 
@@ -63,7 +63,13 @@ const chainOptions = [
   { value: "fantom", label: "Fantom" },
 ];
 
-const tokenOptions = [
+type TokenOption = {
+  value: string;
+  label: string;
+  slug?: string;
+};
+
+const FALLBACK_TOKENS: TokenOption[] = [
   { value: "USDT", label: "USDT" },
   { value: "USDC", label: "USDC" },
   { value: "ETH", label: "ETH" },
@@ -89,8 +95,55 @@ export default function HomePage(): JSX.Element {
   const [response, setResponse] = useState<ApiResponse | null>(null);
   const [isChainModalOpen, setChainModalOpen] = useState(false);
   const [isTokenModalOpen, setTokenModalOpen] = useState(false);
+  const [tokenOptions, setTokenOptions] = useState<TokenOption[]>(FALLBACK_TOKENS);
+  const [tokenQuery, setTokenQuery] = useState("");
 
   const preferredChains = useMemo(() => [...form.preferredChains], [form.preferredChains]);
+  const filteredTokens = useMemo(() => {
+    if (!tokenQuery.trim()) {
+      return tokenOptions;
+    }
+    const q = tokenQuery.trim().toLowerCase();
+    return tokenOptions.filter(
+      (token) =>
+        token.value.toLowerCase().includes(q) ||
+        token.label.toLowerCase().includes(q) ||
+        (token.slug ?? "").toLowerCase().includes(q),
+    );
+  }, [tokenOptions, tokenQuery]);
+
+  useEffect(() => {
+    let cancelled = false;
+    async function fetchTokens() {
+      try {
+        const res = await fetch(`${API_BASE_URL}/tokens`);
+        if (!res.ok) {
+          throw new Error("failed to fetch");
+        }
+        const data = (await res.json()) as { tokens: { symbol: string; name: string; slug?: string }[] };
+        if (cancelled) return;
+        if (Array.isArray(data.tokens) && data.tokens.length > 0) {
+          const next = data.tokens
+            .map((item) => ({
+              value: item.symbol.toUpperCase(),
+              label: `${item.symbol.toUpperCase()} · ${item.name}`,
+              slug: item.slug,
+            }))
+            .slice(0, 100);
+          setTokenOptions(next);
+        }
+      } catch (fetchError) {
+        console.warn("Failed to fetch token list, using fallback", fetchError);
+        if (!cancelled) {
+          setTokenOptions(FALLBACK_TOKENS);
+        }
+      }
+    }
+    fetchTokens();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -229,13 +282,16 @@ export default function HomePage(): JSX.Element {
       <SingleSelectionModal
         title="Выбор токена"
         isOpen={isTokenModalOpen}
-        options={tokenOptions}
+        options={filteredTokens}
         selected={form.token}
+        query={tokenQuery}
+        onQueryChange={setTokenQuery}
         onSelect={(value) => {
           setForm((prev) => ({ ...prev, token: value }));
           setTokenModalOpen(false);
         }}
         onClose={() => setTokenModalOpen(false)}
+        isLoading={!tokenOptions.length}
       />
 
       <SelectionModal
@@ -351,10 +407,13 @@ function SelectionModal({
 type SingleSelectionModalProps = {
   title: string;
   isOpen: boolean;
-  options: { value: string; label: string }[];
+  options: TokenOption[];
   selected: string;
+  query: string;
+  onQueryChange: (value: string) => void;
   onSelect: (value: string) => void;
   onClose: () => void;
+  isLoading?: boolean;
 };
 
 function SingleSelectionModal({
@@ -362,8 +421,11 @@ function SingleSelectionModal({
   isOpen,
   options,
   selected,
+  query,
+  onQueryChange,
   onSelect,
   onClose,
+  isLoading = false,
 }: SingleSelectionModalProps) {
   if (!isOpen) {
     return null;
@@ -378,21 +440,34 @@ function SingleSelectionModal({
             ×
           </button>
         </header>
+        <div className="modal-search">
+          <input
+            type="text"
+            placeholder="Поиск по символу или названию"
+            value={query}
+            onChange={(event) => onQueryChange(event.target.value)}
+          />
+        </div>
         <div className="options">
-          {options.map((option) => {
-            const isSelected = selected === option.value;
-            return (
-              <label key={option.value} className={`option ${isSelected ? "selected" : ""}`}>
-                <input
-                  type="radio"
-                  name="token-select"
-                  checked={isSelected}
-                  onChange={() => onSelect(option.value)}
-                />
-                <span>{option.label}</span>
-              </label>
-            );
-          })}
+          {isLoading && <span className="hint">Загружаем список токенов...</span>}
+          {!isLoading &&
+            options.map((option) => {
+              const isSelected = selected === option.value;
+              return (
+                <label key={option.value} className={`option ${isSelected ? "selected" : ""}`}>
+                  <input
+                    type="radio"
+                    name="token-select"
+                    checked={isSelected}
+                    onChange={() => onSelect(option.value)}
+                  />
+                  <span>{option.label}</span>
+                </label>
+              );
+            })}
+          {!isLoading && options.length === 0 && (
+            <span className="hint">Ничего не найдено — попробуй другой поиск.</span>
+          )}
         </div>
         <footer>
           <button type="button" onClick={onClose}>

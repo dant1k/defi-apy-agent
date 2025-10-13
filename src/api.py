@@ -9,6 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field, field_validator
 
 from src.app import run_agent
+from src.coins import get_top_market_tokens
 from src.utils.constants import SUPPORTED_RISK_LEVELS
 
 
@@ -80,6 +81,13 @@ app.add_middleware(
 @app.get("/health")
 async def health_check() -> Dict[str, str]:
     return {"status": "ok"}
+
+
+@app.get("/tokens")
+async def tokens_list(limit: int = 100, force: bool = False) -> Dict[str, List[Dict[str, str]]]:
+    safe_limit = max(1, min(limit, 200))
+    tokens = get_top_market_tokens(limit=safe_limit, force_refresh=force)
+    return {"tokens": tokens}
 
 
 @app.post("/strategies", response_model=StrategyResponse, response_model_exclude_none=True)

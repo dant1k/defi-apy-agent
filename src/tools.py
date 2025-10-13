@@ -11,7 +11,7 @@ import requests
 
 API_URL = "https://yields.llama.fi/pools"
 PROTOCOL_URL_TMPL = "https://api.llama.fi/protocol/{slug}"
-CACHE_DURATION = timedelta(minutes=5)
+TOKEN_CACHE_DURATION = timedelta(minutes=5)
 
 RISK_LEVELS = {
     "низкий": 1,
@@ -20,42 +20,60 @@ RISK_LEVELS = {
 }
 
 
-@dataclass
-class CacheEntry:
-    """Элемент кэша для данных DeFiLlama."""
-
-    fetched_at: datetime
-    data: List[Dict[str, Any]]
-
-
 class APIError(Exception):
     """Пользовательское исключение для ошибок API."""
 
 
-_pool_cache: Optional[CacheEntry] = None
 _project_url_cache: Dict[str, Optional[str]] = {}
 
 
-def _ensure_cache(force_refresh: bool = False) -> List[Dict[str, Any]]:
-    """Получает актуальные данные по пулам из DeFiLlama."""
-    global _pool_cache
+@dataclass
+class TokenPoolCache:
+    fetched_at: datetime
+    data: List[Dict[str, Any]]
 
-    now = datetime.utcnow()
-    if not force_refresh and _pool_cache and now - _pool_cache.fetched_at < CACHE_DURATION:
-        return _pool_cache.data
+
+_token_cache: Dict[str, TokenPoolCache] = {}
+
+
+def _fetch_pools_for_token(token: str, limit: int) -> List[Dict[str, Any]]:
+    params = {"search": token}
+    if limit:
+        params["limit"] = str(limit)
 
     try:
-        response = requests.get(API_URL, timeout=20)
+        response = requests.get(API_URL, params=params, timeout=20)
         response.raise_for_status()
         payload = response.json()
     except requests.RequestException as exc:
-        raise APIError(f"Не удалось получить данные из DeFiLlama: {exc}") from exc
+        raise APIError(f"Не удалось получить данные для токена {token}: {exc}") from exc
 
-    if "data" not in payload or not isinstance(payload["data"], list):
-        raise APIError("Неверный формат ответа от DeFiLlama API")
+    data = (payload or {}).get("data", [])
+    if data:
+        return data
 
-    _pool_cache = CacheEntry(fetched_at=now, data=payload["data"])
-    return _pool_cache.data
+    # fallback на символ, если поиск ничего не вернул
+    try:
+        response = requests.get(API_URL, params={"symbol": token}, timeout=20)
+        response.raise_for_status()
+        payload = response.json()
+        return (payload or {}).get("data", [])
+    except requests.RequestException:
+        return []
+
+
+def _ensure_token_cache(token: str, limit: int, force_refresh: bool = False) -> List[Dict[str, Any]]:
+    key = token.upper()
+    now = datetime.utcnow()
+
+    if not force_refresh and key in _token_cache:
+        entry = _token_cache[key]
+        if now - entry.fetched_at < TOKEN_CACHE_DURATION:
+            return entry.data
+
+    data = _fetch_pools_for_token(key, limit)
+    _token_cache[key] = TokenPoolCache(fetched_at=now, data=data)
+    return data
 
 
 def _normalize_search_tokens(token: str) -> List[str]:
@@ -263,8 +281,8 @@ def _decorate_pool(pool: Dict[str, Any]) -> Dict[str, Any]:
 
 def get_opportunities(token: str, limit: int = 50, force_refresh: bool = False) -> List[Dict[str, Any]]:
     """Возвращает список лучших возможностей по заданному токену."""
-    pools = _ensure_cache(force_refresh=force_refresh)
-    filtered = [_decorate_pool(pool) for pool in pools if _token_matches(pool, token)]
+    raw_pools = _ensure_token_cache(token, limit=limit, force_refresh=force_refresh)
+    filtered = [_decorate_pool(pool) for pool in raw_pools if _token_matches(pool, token)]
 
     def sort_key(item: Dict[str, Any]) -> tuple:
         risk_value = RISK_LEVELS.get(item["risk_level"], 3)

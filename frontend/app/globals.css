@@ -172,6 +172,25 @@ section.page {
   font-size: 1.15rem;
 }
 
+.modal-search {
+  display: flex;
+}
+
+.modal-search input {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid #2c3d66;
+  background: #0b0f19;
+  color: #f2f7ff;
+  font-size: 1rem;
+}
+
+.modal-search input:focus {
+  outline: 2px solid #466dff;
+  outline-offset: 1px;
+}
+
 .close-button {
   background: transparent;
   border: none;
@@ -236,6 +255,11 @@ section.page {
   background: transparent;
   border: 1px solid #4a5e94;
   color: #b8c7ff;
+}
+
+.hint {
+  color: #9fb0ff;
+  font-size: 0.9rem;
 }
 
 .submit {
