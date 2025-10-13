@@ -1,0 +1,388 @@
+:root {
+  color-scheme: light dark;
+  font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background-color: #10121a;
+  color: #e5ecff;
+}
+
+body {
+  margin: 0;
+}
+
+.app-shell {
+  min-height: 100vh;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 32px 20px 24px;
+  gap: 24px;
+}
+
+header h1 {
+  margin: 0 0 4px;
+  font-size: 2rem;
+}
+
+header p {
+  margin: 0;
+  color: #9fb0ff;
+}
+
+footer {
+  font-size: 0.85rem;
+  color: #6b7abf;
+}
+
+section.page {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  background: #151a27;
+  border: 1px solid #22304f;
+  border-radius: 16px;
+  padding: 20px;
+}
+
+.form-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.form-row label {
+  font-weight: 600;
+  color: #b8c7ff;
+}
+
+.form-row input,
+.form-row select {
+  background: #0b0f19;
+  color: #f2f7ff;
+  border: 1px solid #2c3d66;
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 1rem;
+}
+
+.form-row input:focus,
+.form-row select:focus {
+  outline: 2px solid #466dff;
+  outline-offset: 1px;
+}
+
+.grid-row {
+  display: grid;
+  gap: 16px;
+}
+
+.multi-select {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.multiselect-trigger {
+  background: #0b0f19;
+  color: #f2f7ff;
+  border: 1px solid #2c3d66;
+  border-radius: 10px;
+  padding: 10px 12px;
+  text-align: left;
+  font-size: 1rem;
+}
+
+.multiselect-trigger:hover {
+  border-color: #466dff;
+}
+
+.chip-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #1f2942;
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 0.85rem;
+  color: #d6e0ff;
+}
+
+.chip button {
+  background: transparent;
+  border: none;
+  color: #9fb0ff;
+  font-size: 0.9rem;
+  padding: 0;
+}
+
+.chip button:hover {
+  color: #f2f7ff;
+}
+
+@media (min-width: 720px) {
+  .grid-row {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(6, 10, 18, 0.76);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  z-index: 50;
+}
+
+.modal {
+  width: min(420px, 90%);
+  background: #0f1421;
+  border: 1px solid #22304f;
+  border-radius: 16px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  box-shadow: 0 24px 48px rgba(8, 14, 28, 0.6);
+}
+
+.modal header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.modal header h3 {
+  margin: 0;
+  font-size: 1.15rem;
+}
+
+.close-button {
+  background: transparent;
+  border: none;
+  font-size: 1.4rem;
+  color: #9fb0ff;
+  padding: 0;
+}
+
+.close-button:hover {
+  color: #f2f7ff;
+}
+
+.options {
+  display: grid;
+  gap: 10px;
+  max-height: 320px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid #1f2c49;
+  background: #11182a;
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.option input {
+  width: 18px;
+  height: 18px;
+}
+
+.option.selected {
+  border-color: #566fff;
+  background: rgba(86, 111, 255, 0.18);
+}
+
+.modal footer {
+  display: flex;
+  gap: 12px;
+}
+
+.modal footer button {
+  flex: 1;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: none;
+  font-weight: 600;
+  color: #0b0f19;
+  background: linear-gradient(135deg, #6fa5ff, #86f7ff);
+}
+
+.modal footer button:hover {
+  opacity: 0.92;
+}
+
+.modal footer .outlined {
+  background: transparent;
+  border: 1px solid #4a5e94;
+  color: #b8c7ff;
+}
+
+.submit {
+  margin-top: 4px;
+  padding: 12px 16px;
+  border-radius: 12px;
+  border: none;
+  font-weight: 600;
+  color: #0b0f19;
+  background: linear-gradient(135deg, #6fa5ff, #86f7ff);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.submit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.submit:not(:disabled):hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 24px rgba(111, 165, 255, 0.35);
+}
+
+.error-card,
+.result-card {
+  background: #151a27;
+  border: 1px solid #412e3a;
+  color: #ffcdd7;
+  padding: 20px;
+  border-radius: 16px;
+}
+
+.result-card {
+  border-color: #22304f;
+  color: inherit;
+}
+
+.warnings {
+  margin-top: 12px;
+  padding-left: 18px;
+  color: #ffdf9f;
+}
+
+.strategy {
+  display: grid;
+  gap: 12px;
+  border: 1px solid #22304f;
+  border-radius: 14px;
+  padding: 16px;
+  background: #101828;
+}
+
+.strategy.best {
+  border-color: #5d8cff;
+  box-shadow: 0 8px 26px rgba(93, 140, 255, 0.18);
+}
+
+.strategy header {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.strategy header a,
+.strategy header strong {
+  font-weight: 600;
+  color: #f2f7ff;
+  text-decoration: none;
+}
+
+.strategy header a:hover {
+  text-decoration: underline;
+}
+
+.strategy .chain-tag {
+  color: #a5bbff;
+  background: rgba(111, 165, 255, 0.14);
+  padding: 4px 8px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+}
+
+.strategy dl {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+  gap: 12px;
+}
+
+.strategy dt {
+  font-size: 0.8rem;
+  color: #8d9bd1;
+  margin-bottom: 4px;
+}
+
+.strategy dd {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.strategy dd .sub {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: #a9b8f8;
+  margin-top: 2px;
+}
+
+.alternatives {
+  margin-top: 20px;
+  display: grid;
+  gap: 16px;
+}
+
+.alternative-grid {
+  display: grid;
+  gap: 16px;
+}
+
+@media (min-width: 720px) {
+  .alternative-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.stats {
+  margin: 12px 0 0;
+  color: #9fb0ff;
+}
+
+.grouped-section {
+  margin-top: 20px;
+  display: grid;
+  gap: 18px;
+}
+
+.grouped-section .group {
+  display: grid;
+  gap: 12px;
+}
+
+.grouped-section h5 {
+  margin: 0;
+  font-size: 0.95rem;
+  color: #b8c7ff;
+}
+
+button {
+  cursor: pointer;
+}
