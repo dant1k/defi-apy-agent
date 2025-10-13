@@ -41,8 +41,21 @@ _token_cache: Dict[str, TokenPoolCache] = {}
 
 def _fetch_pools_for_token(token: str, limit: int) -> List[Dict[str, Any]]:
     data = POOL_INDEX.get_pools(token)
+    if data:
+        if limit:
+            data = data[:limit]
+        return data
+
+    params = {"search": token}
     if limit:
-        data = data[:limit]
+        params["limit"] = str(limit)
+    try:
+        response = requests.get(API_URL, params=params, timeout=20)
+        response.raise_for_status()
+        payload = response.json()
+        data = (payload or {}).get("data", [])
+    except requests.RequestException:
+        data = []
     return data
 
 
