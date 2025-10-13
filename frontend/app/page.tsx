@@ -42,6 +42,30 @@ type ErrorResponse = {
 
 type ApiResponse = OkResponse | EmptyResponse | ErrorResponse;
 
+type AnalyticsPool = {
+  pool_id: string;
+  pair: string;
+  protocol?: string;
+  chain?: string;
+  tvl_usd: number;
+  apy: number;
+  tvl_change_pct?: number | null;
+  apy_change_pct?: number | null;
+  momentum?: number | null;
+  category?: string;
+  first_seen?: string | null;
+  action_url?: string | null;
+};
+
+type AnalyticsResponse = {
+  period: string;
+  days: number;
+  min_tvl: number;
+  filters: { symbols: string[]; chains: string[] };
+  count: number;
+  pools: AnalyticsPool[];
+};
+
 const riskOptions: { label: string; value: RiskLevel }[] = [
   { label: "Низкий", value: "низкий" },
   { label: "Средний", value: "средний" },
@@ -97,6 +121,16 @@ export default function HomePage(): JSX.Element {
   const [isTokenModalOpen, setTokenModalOpen] = useState(false);
   const [tokenOptions, setTokenOptions] = useState<TokenOption[]>(FALLBACK_TOKENS);
   const [tokenQuery, setTokenQuery] = useState("");
+  const [isAnalyticsChainModalOpen, setAnalyticsChainModalOpen] = useState(false);
+  const [analyticsPeriod, setAnalyticsPeriod] = useState("7d");
+  const [analyticsMinTvl, setAnalyticsMinTvl] = useState("5");
+  const [analyticsSort, setAnalyticsSort] = useState("momentum");
+  const [analyticsChains, setAnalyticsChains] = useState<string[]>([]);
+  const [analyticsTokens, setAnalyticsTokens] = useState<string[]>([]);
+  const [isSymbolModalOpen, setSymbolModalOpen] = useState(false);
+  const [analyticsData, setAnalyticsData] = useState<AnalyticsResponse | null>(null);
+  const [analyticsError, setAnalyticsError] = useState<string | null>(null);
+  const [isAnalyticsLoading, setAnalyticsLoading] = useState(false);
 
   const preferredChains = useMemo(() => [...form.preferredChains], [form.preferredChains]);
   const filteredTokens = useMemo(() => {
@@ -187,6 +221,88 @@ export default function HomePage(): JSX.Element {
     }
   }
 
+  const sortOptions: { label: string; value: string }[] = [
+    { label: "Momentum", value: "momentum" },
+    { label: "Рост TVL", value: "tvl_change" },
+    { label: "Рост APY", value: "apy_change" },
+  ];
+
+  async function loadAnalytics(customSort?: string) {
+    setAnalyticsLoading(true);
+    setAnalyticsError(null);
+    try {
+      const minTvlMillions = parseFloat(analyticsMinTvl);
+      const minTvlValue = Number.isFinite(minTvlMillions) ? minTvlMillions * 1_000_000 : 5_000_000;
+      const sortValue = (customSort ?? analyticsSort) as "momentum" | "tvl_change" | "apy_change";
+
+      const params = new URLSearchParams({
+        period: analyticsPeriod,
+        min_tvl: String(minTvlValue),
+        sort: sortValue,
+        limit: "30",
+      });
+      analyticsTokens.forEach((token) => params.append("symbols", token));
+      analyticsChains.forEach((chain) => params.append("chains", chain));
+
+      const res = await fetch(`${API_BASE_URL}/analytics/new-pools?${params.toString()}`);
+      if (!res.ok) {
+        const detail = await res.json().catch(() => null);
+        throw new Error(detail?.detail ?? "Сервер вернул ошибку");
+      }
+      const data = (await res.json()) as AnalyticsResponse;
+      setAnalyticsData(data);
+      setAnalyticsSort(sortValue);
+    } catch (fetchError) {
+      const message = fetchError instanceof Error ? fetchError.message : "Не удалось загрузить аналитику";
+      setAnalyticsError(message);
+    } finally {
+      setAnalyticsLoading(false);
+    }
+  }
+
+  function exportAnalyticsAsCsv() {
+    if (!analyticsData || analyticsData.pools.length === 0) {
+      return;
+    }
+    const headers = [
+      "Pair",
+      "Protocol",
+      "Chain",
+      "TVL (USD)",
+      "TVL Change %",
+      "APY",
+      "APY Change %",
+      "Momentum",
+      "Category",
+      "First Seen",
+      "URL",
+    ];
+    const rows = analyticsData.pools.map((pool) => [
+      pool.pair,
+      pool.protocol ?? "",
+      pool.chain ?? "",
+      String(pool.tvl_usd ?? ""),
+      pool.tvl_change_pct != null ? pool.tvl_change_pct.toString() : "",
+      String(pool.apy ?? ""),
+      pool.apy_change_pct != null ? pool.apy_change_pct.toString() : "",
+      pool.momentum != null ? pool.momentum.toString() : "",
+      pool.category ?? "",
+      pool.first_seen ?? "",
+      pool.action_url ?? "",
+    ]);
+    const csv = [headers, ...rows]
+      .map((line) => line.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(","))
+      .join("\n");
+
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `new-pools-${analyticsPeriod}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
+  }
+
   return (
     <section className="page">
       <form className="form" onSubmit={handleSubmit}>
@@ -252,7 +368,7 @@ export default function HomePage(): JSX.Element {
               <button
                 type="button"
                 className="multiselect-trigger"
-                onClick={() => setChainModalOpen(true)}
+                onClick={() => setAnalyticsChainModalOpen(true)}
               >
                 {preferredChains.length ? `Выбрано: ${preferredChains.length}` : "Выбрать сети"}
               </button>
@@ -279,6 +395,164 @@ export default function HomePage(): JSX.Element {
 
       {response && <ResultsCard response={response} />}
 
+      <div className="analytics-panel">
+        <header className="analytics-header">
+          <h2>Новые DeFi пулы</h2>
+          <span>Следи за свежими возможностями по росту TVL и APY</span>
+        </header>
+
+        <div className="analytics-filters">
+          <div className="form-row">
+            <label htmlFor="analyticsPeriod">Период</label>
+            <select
+              id="analyticsPeriod"
+              value={analyticsPeriod}
+              onChange={(event) => setAnalyticsPeriod(event.target.value)}
+            >
+              <option value="24h">24 часа</option>
+              <option value="7d">7 дней</option>
+              <option value="30d">30 дней</option>
+            </select>
+          </div>
+          <div className="form-row">
+            <label htmlFor="analyticsMinTvl">Мин. TVL (млн USD)</label>
+            <input
+              id="analyticsMinTvl"
+              type="number"
+              min="0"
+              step="0.5"
+              value={analyticsMinTvl}
+              onChange={(event) => setAnalyticsMinTvl(event.target.value)}
+            />
+          </div>
+          <div className="form-row">
+            <label htmlFor="analyticsSort">Сортировка</label>
+            <select
+              id="analyticsSort"
+              value={analyticsSort}
+              onChange={(event) => setAnalyticsSort(event.target.value)}
+            >
+              {sortOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="form-row">
+            <label>Сети</label>
+            <div className="multi-select">
+              <button
+                type="button"
+                className="multiselect-trigger"
+                onClick={() => setChainModalOpen(true)}
+              >
+                {analyticsChains.length ? `Выбрано: ${analyticsChains.length}` : "Выбрать сети"}
+              </button>
+              <ChipGroup
+                items={analyticsChains}
+                onRemove={(value) =>
+                  setAnalyticsChains((prev) => prev.filter((item) => item !== value))
+                }
+              />
+            </div>
+          </div>
+          <div className="form-row">
+            <label>Тикеры</label>
+            <div className="multi-select">
+              <button
+                type="button"
+                className="multiselect-trigger"
+                onClick={() => setSymbolModalOpen(true)}
+              >
+                {analyticsTokens.length ? `Выбрано: ${analyticsTokens.length}` : "Выбрать тикеры"}
+              </button>
+              <ChipGroup
+                items={analyticsTokens}
+                onRemove={(value) =>
+                  setAnalyticsTokens((prev) => prev.filter((item) => item !== value))
+                }
+              />
+            </div>
+          </div>
+        </div>
+
+        <div className="analytics-actions">
+          <button type="button" onClick={() => loadAnalytics()} disabled={isAnalyticsLoading}>
+            {isAnalyticsLoading ? "Загружаем..." : "Показать новые пулы"}
+          </button>
+          <button
+            type="button"
+            className="secondary"
+            onClick={() => loadAnalytics("momentum")}
+            disabled={isAnalyticsLoading}
+          >
+            🔥 Новые трендовые
+          </button>
+          <button
+            type="button"
+            className="outlined"
+            onClick={exportAnalyticsAsCsv}
+            disabled={!analyticsData || analyticsData.pools.length === 0}
+          >
+            Экспорт CSV
+          </button>
+        </div>
+
+        {analyticsError && <div className="error-card">⚠️ {analyticsError}</div>}
+
+        {analyticsData && analyticsData.pools.length > 0 && (
+          <div className="analytics-table-wrapper">
+            <table className="analytics-table">
+              <thead>
+                <tr>
+                  <th>Пул</th>
+                  <th>Протокол</th>
+                  <th>Сеть</th>
+                  <th>TVL</th>
+                  <th>Δ TVL</th>
+                  <th>APY</th>
+                  <th>Δ APY</th>
+                  <th>Momentum</th>
+                  <th>Категория</th>
+                  <th>Дата</th>
+                  <th>Ссылка</th>
+                </tr>
+              </thead>
+              <tbody>
+                {analyticsData.pools.map((pool) => (
+                  <tr key={pool.pool_id}>
+                    <td>{pool.pair}</td>
+                    <td>{pool.protocol ?? "-"}</td>
+                    <td>{pool.chain ?? "-"}</td>
+                    <td>{formatNumber(pool.tvl_usd, 0)} $</td>
+                    <td>{formatPercent(pool.tvl_change_pct)}</td>
+                    <td>{formatNumber(pool.apy)}%</td>
+                    <td>{formatPercent(pool.apy_change_pct)}</td>
+                    <td>{formatNumber(pool.momentum ?? undefined, 2)}</td>
+                    <td>{pool.category ?? "-"}</td>
+                    <td>{pool.first_seen ? new Date(pool.first_seen).toLocaleString() : "-"}</td>
+                    <td>
+                      {pool.action_url ? (
+                        <a href={pool.action_url} target="_blank" rel="noopener noreferrer">
+                          Перейти
+                        </a>
+                      ) : (
+                        "-"
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {analyticsData && analyticsData.pools.length === 0 && !analyticsError && (
+          <div className="empty-state">Пулы не найдены по заданным фильтрам.</div>
+        )}
+      </div>
+
       <SingleSelectionModal
         title="Выбор токена"
         isOpen={isTokenModalOpen}
@@ -292,6 +566,34 @@ export default function HomePage(): JSX.Element {
         }}
         onClose={() => setTokenModalOpen(false)}
         isLoading={!tokenOptions.length}
+      />
+
+      <SelectionModal
+        title="Выбор тикеров для аналитики"
+        isOpen={isSymbolModalOpen}
+        options={tokenOptions}
+        selected={analyticsTokens}
+        onToggle={(value) =>
+          setAnalyticsTokens((prev) =>
+            prev.includes(value) ? prev.filter((item) => item !== value) : [...prev, value],
+          )
+        }
+        onClose={() => setSymbolModalOpen(false)}
+        onClear={() => setAnalyticsTokens([])}
+      />
+
+      <SelectionModal
+        title="Сети для аналитики"
+        isOpen={isAnalyticsChainModalOpen}
+        options={chainOptions}
+        selected={analyticsChains}
+        onToggle={(value) =>
+          setAnalyticsChains((prev) =>
+            prev.includes(value) ? prev.filter((item) => item !== value) : [...prev, value],
+          )
+        }
+        onClose={() => setAnalyticsChainModalOpen(false)}
+        onClear={() => setAnalyticsChains([])}
       />
 
       <SelectionModal
@@ -496,6 +798,13 @@ function formatNumber(value?: number, fractionDigits = 2): string {
   return value.toLocaleString("ru-RU", {
     maximumFractionDigits: fractionDigits,
   });
+}
+
+function formatPercent(value?: number | null, fractionDigits = 2): string {
+  if (value === undefined || value === null || Number.isNaN(value)) {
+    return "-";
+  }
+  return `${value.toFixed(fractionDigits)}%`;
 }
 
 function formatLockup(days?: number): string {

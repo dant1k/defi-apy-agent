@@ -56,6 +56,40 @@ def test_strategy_endpoint_success(monkeypatch) -> None:
     assert response.json() == sample_response
 
 
+def test_new_pools_endpoint(monkeypatch) -> None:
+    client = TestClient(api.app)
+
+    payload = {
+        "period": "7d",
+        "days": 7,
+        "min_tvl": 5_000_000,
+        "filters": {"symbols": [], "chains": []},
+        "count": 1,
+        "pools": [
+            {
+                "pool_id": "pool-1",
+                "pair": "APT-USDC",
+                "protocol": "protocol-a",
+                "chain": "Aptos",
+                "tvl_usd": 6500000.0,
+                "apy": 12.0,
+                "tvl_change_pct": 20.0,
+                "apy_change_pct": 5.0,
+                "momentum": 14.0,
+                "category": "token-stable",
+                "first_seen": None,
+                "action_url": "https://protocol-a.example",
+            }
+        ],
+    }
+
+    monkeypatch.setattr(api, "get_new_pools", lambda *args, **kwargs: payload)
+
+    response = client.get("/analytics/new-pools")
+    assert response.status_code == 200
+    assert response.json() == payload
+
+
 def test_strategy_endpoint_validation_error() -> None:
     client = TestClient(api.app)
 

@@ -2,12 +2,13 @@
 
 from __future__ import annotations
 
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field, field_validator
 
+from src.analytics import get_new_pools
 from src.app import run_agent
 from src.coins import get_top_market_tokens
 from src.utils.constants import SUPPORTED_RISK_LEVELS
@@ -108,3 +109,25 @@ async def get_strategies(payload: StrategyRequest) -> StrategyResponse:
     )
 
     return StrategyResponse(**result)
+
+
+@app.get("/analytics/new-pools")
+async def analytics_new_pools(
+    period: str = Query("7d", pattern="^(24h|7d|30d)$"),
+    min_tvl: float = Query(5_000_000, ge=0),
+    symbols: Optional[List[str]] = Query(None, alias="symbols"),
+    chains: Optional[List[str]] = Query(None, alias="chains"),
+    sort: str = Query("momentum", pattern="^(momentum|tvl_change|apy_change)$"),
+    limit: int = Query(50, ge=1, le=200),
+    force_refresh: bool = False,
+) -> Dict[str, Any]:
+    data = get_new_pools(
+        period,
+        min_tvl=min_tvl,
+        symbols=symbols or (),
+        chains=chains or (),
+        sort=sort,
+        limit=limit,
+        force_refresh=force_refresh,
+    )
+    return data
