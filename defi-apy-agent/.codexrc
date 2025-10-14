@@ -1,0 +1,27 @@
+{
+  "project": "DeFi APY Agent",
+  "default_branch": "main",
+  "branch_prefix": "feature/",
+  "auto_read_issues": true,
+  "auto_pr": true,
+  "commit_style": "conventional",
+  "codex_identity": "frontend-engineer",
+  "rules": {
+    "labels": {
+      "frontend": true,
+      "AI": true,
+      "enhancement": true
+    },
+    "ignore_labels": ["documentation", "question"]
+  },
+  "workflow": {
+    "on_issue_open": "create_branch_and_start",
+    "on_issue_update": "sync_progress_with_checklist",
+    "on_pr_merged": "close_issue"
+  },
+  "stages": {
+    "Stage 1": ["UI layout", "Search filters", "Card rendering", "Skeleton loader"],
+    "Stage 2": ["AI assistant", "Compare table"],
+    "Stage 3": ["Mobile adaptation", "Watchlist", "Themes"]
+  }
+}
