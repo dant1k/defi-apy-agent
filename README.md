@@ -64,6 +64,9 @@ LangGraph Studio also integrates with [LangSmith](https://smith.langchain.com/) 
 Добавлен REST API и веб-клиент для подбора стратегий:
 
 - `src/api.py` — FastAPI-приложение (`uvicorn src.api:app --reload`).
-- `frontend/` — Next.js интерфейс (запуск: `npm install`, затем `npm run dev`).
+- `frontend/` — Next.js интерфейс:
+  - `npm run dev:turbo` — мгновенный дев-сервер на Turbopack.
+  - `npm run build` — SSG/ISR-сборка (revalidate=300).
+  - `npm run analyze` — отчёт bundle analyzer для client/edge/node чанков.
 
 По умолчанию веб-клиент обращается к API на `http://localhost:8000`. Чтобы указать другой адрес, установите переменную окружения `NEXT_PUBLIC_API_BASE_URL`.
