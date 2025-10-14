@@ -177,17 +177,21 @@ def format_response(state: AgentState, runtime: Runtime[Context]) -> Dict[str, A
 
     best = enrich(analysis["best"])
     alternatives = [enrich(item) for item in analysis.get("alternatives", [])]
+    all_strategies = [enrich(item) for item in analysis.get("ranked", [])]
     response: Dict[str, Any] = {
         "status": "ok",
         "token": state.get("token"),
         "best_strategy": best,
         "alternatives": alternatives,
         "statistics": {
-            "matched": analysis.get("matched_opportunities", 0),
+            "matched": analysis.get("matched_opportunities", analysis.get("matched_count", 0)),
             "considered": analysis.get("total_opportunities", 0),
         },
         "warnings": state.get("warnings", []),
     }
+
+    if all_strategies:
+        response["all_strategies"] = all_strategies
 
     context = (runtime.context or {}) if runtime else {}
     if context.get("keep_debug_data"):

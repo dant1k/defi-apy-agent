@@ -375,6 +375,7 @@ def analyze_strategies(apy_options: List[Dict[str, Any]], user_prefs: Dict[str, 
         "best": best,
         "alternatives": alternatives,
         "matched_count": len(ranked),
+        "ranked": ranked,
     }
 
 

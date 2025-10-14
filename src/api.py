@@ -2,9 +2,14 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
+from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional
 
-from fastapi import FastAPI, HTTPException, Query
+import asyncio
+
+from fastapi import BackgroundTasks, FastAPI, HTTPException, Query
+from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field, field_validator
 
@@ -72,7 +77,23 @@ class StrategyResponse(BaseModel):
     debug: Optional[Dict[str, Any]] = None
 
 
-app = FastAPI(title="DeFi APY Agent API", version="1.0.0")
+CACHE_TTL = timedelta(minutes=10)
+STALE_AFTER = timedelta(minutes=5)
+
+
+@dataclass
+class StrategyCacheEntry:
+    payload: "StrategyRequest"
+    data: Dict[str, Any]
+    updated_at: datetime
+    expires_at: datetime
+    refresh_in_progress: bool = False
+
+
+_strategy_cache: Dict[str, StrategyCacheEntry] = {}
+
+
+app = FastAPI(title="DeFi APY Agent API", version="1.0.1")
 
 app.add_middleware(
     CORSMiddleware,
@@ -94,14 +115,23 @@ async def startup_event() -> None:
 
 
 @app.get("/tokens")
-async def tokens_list(limit: int = 100, force: bool = False) -> Dict[str, List[Dict[str, str]]]:
+async def tokens_list(limit: int = 100, force: bool = False):
     safe_limit = max(1, min(limit, 200))
     tokens = get_top_market_tokens(limit=safe_limit, force_refresh=force)
-    return {"tokens": tokens}
+    return JSONResponse(
+        content={"tokens": tokens},
+        headers={"Cache-Control": "public, max-age=300, stale-while-revalidate=300"},
+    )
 
 
-@app.post("/strategies", response_model=StrategyResponse, response_model_exclude_none=True)
-async def get_strategies(payload: StrategyRequest) -> StrategyResponse:
+def _strategy_cache_key(payload: StrategyRequest) -> str:
+    preferences = payload.preferences.model_dump(exclude_none=True) if payload.preferences else {}
+    risk_key = preferences.get("risk_level", "any")
+    wrappers_key = preferences.get("include_wrappers", True)
+    return f"{payload.token.strip().upper()}|{risk_key}|{wrappers_key}"
+
+
+async def _execute_strategy(payload: StrategyRequest) -> Dict[str, Any]:
     if not payload.token.strip():
         raise HTTPException(status_code=400, detail="Поле token не может быть пустым")
 
@@ -109,15 +139,82 @@ async def get_strategies(payload: StrategyRequest) -> StrategyResponse:
         payload.preferences.model_dump(exclude_none=True) if payload.preferences else {}
     )
 
-    result = run_agent(
+    result = await asyncio.to_thread(
+        run_agent,
         payload.token.strip(),
         user_preferences=preferences,
         result_limit=payload.result_limit or 200,
         force_refresh=payload.force_refresh,
         debug=payload.debug,
     )
+    return result
 
-    return StrategyResponse(**result)
+
+async def _refresh_cache_entry(key: str, payload: StrategyRequest) -> None:
+    entry = _strategy_cache.get(key)
+    if entry is None:
+        return
+    try:
+        refreshed_payload = payload.model_copy(deep=True)
+        refreshed_payload.force_refresh = True
+        data = await _execute_strategy(refreshed_payload)
+        now = datetime.utcnow()
+        _strategy_cache[key] = StrategyCacheEntry(
+            payload=refreshed_payload,
+            data=data,
+            updated_at=now,
+            expires_at=now + CACHE_TTL,
+        )
+    finally:
+        refreshed = _strategy_cache.get(key)
+        if refreshed:
+            refreshed.refresh_in_progress = False
+
+
+@app.post("/strategies", response_model=StrategyResponse, response_model_exclude_none=True)
+async def get_strategies(
+    payload: StrategyRequest, background_tasks: BackgroundTasks
+) -> StrategyResponse:
+    key = _strategy_cache_key(payload)
+    now = datetime.utcnow()
+    cached = _strategy_cache.get(key)
+
+    if payload.force_refresh:
+        data = await _execute_strategy(payload)
+        entry = StrategyCacheEntry(
+            payload=payload.model_copy(deep=True),
+            data=data,
+            updated_at=now,
+            expires_at=now + CACHE_TTL,
+        )
+        _strategy_cache[key] = entry
+        return JSONResponse(
+            content=data,
+            headers={"Cache-Control": "public, max-age=120, stale-while-revalidate=120"},
+        )
+
+    if cached and cached.expires_at > now:
+        response = StrategyResponse(**cached.data)
+        if now - cached.updated_at > STALE_AFTER and not cached.refresh_in_progress:
+            cached.refresh_in_progress = True
+            background_tasks.add_task(_refresh_cache_entry, key, cached.payload)
+        return JSONResponse(
+            content=response.model_dump(exclude_none=True),
+            headers={"Cache-Control": "public, max-age=60, stale-while-revalidate=120"},
+        )
+
+    data = await _execute_strategy(payload)
+    entry = StrategyCacheEntry(
+        payload=payload.model_copy(deep=True),
+        data=data,
+        updated_at=now,
+        expires_at=now + CACHE_TTL,
+    )
+    _strategy_cache[key] = entry
+    return JSONResponse(
+        content=data,
+        headers={"Cache-Control": "public, max-age=60, stale-while-revalidate=120"},
+    )
 
 
 @app.get("/analytics/new-pools")
