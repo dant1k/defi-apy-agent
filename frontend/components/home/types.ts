@@ -1,53 +1,44 @@
-export type RiskLevel = "низкий" | "средний" | "высокий";
-
-export type Strategy = {
-  platform?: string;
-  chain?: string;
-  symbol?: string;
-  tokens?: string[];
-  apy?: number;
-  apy_7d?: number | null;
-  risk_level?: RiskLevel;
-  risk_description?: string;
-  lockup_days?: number;
-  tvl_usd?: number;
-  score?: number;
-  pool_url?: string | null;
-  protocol_url?: string | null;
-  action_url?: string | null;
+export type AggregatedStrategy = {
+  id: string;
+  name: string;
+  protocol: string;
+  chain: string;
+  apy: number;
+  tvl_usd: number;
+  tvl_growth_24h: number;
+  risk_index: number | null;
+  score?: number | null;
+  ai_score?: number | null;
+  ai_comment?: string | null;
+  token_pair?: string | null;
+  url?: string | null;
+  icon_url?: string | null;
+  source?: string | null;
+  updated_at?: string | null;
 };
 
-export type OkResponse = {
-  status: "ok";
-  token: string;
-  best_strategy: Strategy;
-  alternatives: Strategy[];
-  all_strategies?: Strategy[];
-  statistics?: { matched?: number; considered?: number };
-  warnings?: string[];
+export type StrategiesResponse = {
+  updated_at: string | null;
+  total: number;
+  limit: number;
+  offset: number;
+  items: AggregatedStrategy[];
 };
 
-export type EmptyResponse = {
-  status: "empty";
-  token?: string;
-  warnings?: string[];
+export type FiltersState = {
+  chain: string;
+  protocol: string;
+  minTvl: number;
+  minApy: number;
+  sort: "ai_score_desc" | "apy_desc" | "tvl_desc" | "tvl_growth_desc";
 };
 
-export type ErrorResponse = {
-  status: "error";
-  message: string;
-  warnings?: string[];
+export type TvlPoint = {
+  t: string;
+  v: number;
 };
 
-export type ApiResponse = OkResponse | EmptyResponse | ErrorResponse;
-
-export type TokenOption = {
-  value: string;
-  label: string;
-  slug?: string;
-};
-
-export type StrategyCacheEntry = {
-  data: ApiResponse;
-  updatedAt: number;
+export type StrategyDetail = {
+  strategy: AggregatedStrategy;
+  history: TvlPoint[];
 };
