@@ -1,732 +1,287 @@
-import { FormEvent, useEffect, useMemo, useRef, useState, useTransition } from "react";
+import { ChangeEvent, useEffect, useMemo, useState } from "react";
 import dynamic from "next/dynamic";
-import { ApiResponse, RiskLevel, Strategy, StrategyCacheEntry, TokenOption } from "./types";
+import type { AggregatedStrategy, FiltersState } from "./types";
 import { formatLabel, formatNumber, formatPercent } from "./formatters";
-import { fetchStrategies } from "../../lib/api";
-import { useStrategyFilters, SortOption, GrowthFilter } from "../../store/useStrategyFilters";
-import { useShallow } from "zustand/react/shallow";
+import { fetchAggregatorStrategies } from "../../lib/api";
+import { StrategyDetailModal } from "./strategy-detail-modal";
 
-const LoadingGenie = dynamic(() => import("./loading-genie").then((mod) => mod.LoadingGenie), {
-  ssr: false,
-});
 const StrategiesSkeleton = dynamic(
   () => import("./home-skeleton").then((mod) => mod.StrategiesSkeleton),
   { ssr: false },
 );
 
-const riskOptions: { label: string; value: RiskLevel }[] = [
-  { label: "Низкий", value: "низкий" },
-  { label: "Средний", value: "средний" },
-  { label: "Высокий", value: "высокий" },
-];
-
-const sortOptions: { value: SortOption; label: string }[] = [
-  { value: "apy", label: "APY" },
-  { value: "tvl", label: "TVL" },
-  { value: "novelty", label: "Новизне" },
-];
-
-const CACHE_TTL_MS = 5 * 60 * 1000;
-const DEFAULT_ETA_SECONDS = 7;
-
 type StrategiesPanelProps = {
-  tokenOptions: TokenOption[];
   apiBaseUrl: string;
-  cache: Record<string, StrategyCacheEntry>;
-  onCacheUpdate: (key: string, entry: StrategyCacheEntry) => void;
+  chains: string[];
+  protocols: string[];
 };
 
 type FetchState = {
-  response: ApiResponse | null;
-  error: string | null;
-  isLoading: boolean;
-  isRefreshing: boolean;
-  isCached: boolean;
-  lastUpdated: number | null;
+  items: AggregatedStrategy[];
+  total: number;
+  updatedAt: string | null;
 };
 
-const initialFetchState: FetchState = {
-  response: null,
-  error: null,
-  isLoading: false,
-  isRefreshing: false,
-  isCached: false,
-  lastUpdated: null,
+const DEFAULT_FILTERS: FiltersState = {
+  chain: "all",
+  protocol: "all",
+  minTvl: 1_000_000,
+  minApy: 0,
+  sort: "ai_score_desc",
 };
 
-function getCacheKey(token: string, risk: RiskLevel, wrappers: boolean): string {
-  return JSON.stringify({ token: token.trim().toUpperCase(), risk, wrappers });
-}
+const PAGE_LIMIT = 150;
 
-export default function StrategiesPanel({
-  tokenOptions,
-  apiBaseUrl,
-  cache,
-  onCacheUpdate,
-}: StrategiesPanelProps): JSX.Element {
-  const {
-    token,
-    riskLevel,
-    includeWrappers,
-    sortBy,
-    growthFilter,
-    onlyNew,
-    onlyTop,
-    requestId,
-    setToken,
-    setRiskLevel,
-    setIncludeWrappers,
-    setSortBy,
-    setGrowthFilter,
-    setOnlyNew,
-    setOnlyTop,
-    triggerFetch,
-  } = useStrategyFilters(
-    useShallow((state) => ({
-      token: state.token,
-      riskLevel: state.riskLevel,
-      includeWrappers: state.includeWrappers,
-      sortBy: state.sortBy,
-      growthFilter: state.growthFilter,
-      onlyNew: state.onlyNew,
-      onlyTop: state.onlyTop,
-      requestId: state.requestId,
-      setToken: state.setToken,
-      setRiskLevel: state.setRiskLevel,
-      setIncludeWrappers: state.setIncludeWrappers,
-      setSortBy: state.setSortBy,
-      setGrowthFilter: state.setGrowthFilter,
-      setOnlyNew: state.setOnlyNew,
-      setOnlyTop: state.setOnlyTop,
-      triggerFetch: state.triggerFetch,
-    })),
-  );
-
-  const [fetchState, setFetchState] = useState<FetchState>(initialFetchState);
-  const [isTokenModalOpen, setTokenModalOpen] = useState(false);
-  const [tokenQuery, setTokenQuery] = useState("");
-  const [showAll, setShowAll] = useState(false);
-  const [etaSeconds, setEtaSeconds] = useState<number | null>(null);
-  const [showSkeleton, setShowSkeleton] = useState(false);
-  const [isPending, startTransition] = useTransition();
-
-  const cacheRef = useRef(cache);
-  const bypassRef = useRef(false);
-  const controllerRef = useRef<AbortController | null>(null);
-  const etaTimerRef = useRef<NodeJS.Timeout | null>(null);
+export default function StrategiesPanel({ apiBaseUrl, chains, protocols }: StrategiesPanelProps): JSX.Element {
+  const [filters, setFilters] = useState<FiltersState>(DEFAULT_FILTERS);
+  const [fetchState, setFetchState] = useState<FetchState>({ items: [], total: 0, updatedAt: null });
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+  const [selectedStrategy, setSelectedStrategy] = useState<AggregatedStrategy | null>(null);
 
   useEffect(() => {
-    cacheRef.current = cache;
-  }, [cache]);
-
-  useEffect(() => {
-    if (fetchState.isLoading || fetchState.isRefreshing) {
-      setEtaSeconds(DEFAULT_ETA_SECONDS);
-      if (etaTimerRef.current) {
-        clearInterval(etaTimerRef.current);
-      }
-      etaTimerRef.current = setInterval(() => {
-        setEtaSeconds((prev) => {
-          if (prev === null) return null;
-          if (prev <= 0) return 0;
-          return prev - 1;
-        });
-      }, 1000);
-    } else {
-      setEtaSeconds(null);
-      if (etaTimerRef.current) {
-        clearInterval(etaTimerRef.current);
-        etaTimerRef.current = null;
-      }
-    }
-
-    return () => {
-      if (etaTimerRef.current) {
-        clearInterval(etaTimerRef.current);
-        etaTimerRef.current = null;
-      }
-    };
-  }, [fetchState.isLoading, fetchState.isRefreshing]);
-
-  useEffect(() => {
-    const trimmedToken = token.trim();
-    if (!trimmedToken) {
-      setFetchState(initialFetchState);
-      return;
-    }
-
-    const cacheKey = getCacheKey(trimmedToken, riskLevel, includeWrappers);
-    const cachedEntry = cacheRef.current[cacheKey];
     const controller = new AbortController();
-
-    if (controllerRef.current) {
-      controllerRef.current.abort();
-    }
-    controllerRef.current = controller;
-
-    const shouldUseCache =
-      !bypassRef.current &&
-      cachedEntry &&
-      Date.now() - cachedEntry.updatedAt < CACHE_TTL_MS &&
-      cachedEntry.data.status === "ok";
-
-    setFetchState((prev) => ({
-      ...prev,
-      isLoading: true,
-      isRefreshing: !shouldUseCache,
-      isCached: shouldUseCache,
-      error: null,
-      response: shouldUseCache ? cachedEntry.data : prev.response,
-      lastUpdated: shouldUseCache ? cachedEntry.updatedAt : prev.lastUpdated,
-    }));
-
-    const run = async () => {
+    async function loadData() {
+      setIsLoading(true);
+      setError(null);
       try {
-        const data = await fetchStrategies(
+        const response = await fetchAggregatorStrategies(
           apiBaseUrl,
           {
-            token: trimmedToken,
-            preferences: {
-              risk_level: riskLevel,
-              include_wrappers: includeWrappers,
-              min_tvl: 1_000_000,
-            },
-            result_limit: 200,
+            chain: filters.chain === "all" ? null : filters.chain,
+            protocol: filters.protocol === "all" ? null : filters.protocol,
+            min_tvl: filters.minTvl || null,
+            min_apy: filters.minApy || null,
+            sort: filters.sort,
+            limit: PAGE_LIMIT,
           },
           controller.signal,
         );
-        if (controller.signal.aborted) {
-          return;
-        }
-
-        const entry: StrategyCacheEntry = {
-          data,
-          updatedAt: Date.now(),
-        };
-        cacheRef.current[cacheKey] = entry;
-        onCacheUpdate(cacheKey, entry);
-
-        setFetchState({
-          response: data,
-          error: null,
-          isLoading: false,
-          isRefreshing: false,
-          isCached: false,
-          lastUpdated: entry.updatedAt,
-        });
+        setFetchState({ items: response.items, total: response.total, updatedAt: response.updated_at });
       } catch (err) {
-        if (controller.signal.aborted) {
-          return;
+        if (!controller.signal.aborted) {
+          const message = err instanceof Error ? err.message : "Не удалось загрузить данные";
+          setError(message);
         }
-        const message =
-          err instanceof Error ? err.message : "Не удалось загрузить стратегии, попробуйте позже.";
-        setFetchState((prev) => ({
-          ...prev,
-          error: message,
-          isLoading: false,
-          isRefreshing: false,
-        }));
       } finally {
-        bypassRef.current = false;
+        if (!controller.signal.aborted) {
+          setIsLoading(false);
+        }
       }
-    };
-
-    run();
-
-    return () => {
-      controller.abort();
-    };
-  }, [apiBaseUrl, includeWrappers, onCacheUpdate, requestId, riskLevel, token]);
-
-  useEffect(() => {
-    let timer: NodeJS.Timeout | null = null;
-    if ((fetchState.isLoading || fetchState.isRefreshing || isPending) && !timer) {
-      timer = setTimeout(() => setShowSkeleton(true), 100);
-    } else {
-      setShowSkeleton(false);
-    }
-    return () => {
-      if (timer) {
-        clearTimeout(timer);
-      }
-    };
-  }, [fetchState.isLoading, fetchState.isRefreshing, isPending]);
-
-  const filteredTokens = useMemo(() => {
-    if (!tokenQuery.trim()) {
-      return tokenOptions;
-    }
-    const q = tokenQuery.trim().toLowerCase();
-    return tokenOptions.filter((item) => {
-      const label = item.label.toLowerCase();
-      const value = item.value.toLowerCase();
-      const slug = item.slug?.toLowerCase() ?? "";
-      return label.includes(q) || value.includes(q) || slug.includes(q);
-    });
-  }, [tokenOptions, tokenQuery]);
-
-  const filteredStrategies = useMemo(() => {
-    if (fetchState.response?.status !== "ok") {
-      return [] as Strategy[];
     }
 
-    const list = fetchState.response.all_strategies ?? [
-      fetchState.response.best_strategy,
-      ...fetchState.response.alternatives,
-    ];
+    loadData();
+    return () => controller.abort();
+  }, [apiBaseUrl, filters]);
 
-    let result = list.filter(Boolean) as Strategy[];
-
-    if (growthFilter === "apy_growth_gt_5") {
-      result = result.filter((item) => (item.apy_7d ?? 0) >= 5);
-    }
-
-    if (onlyNew) {
-      result = result.filter((item) => {
-        const delta = item.apy_7d ?? 0;
-        const tvl = item.tvl_usd ?? 0;
-        return delta >= 0.5 || tvl < 2_000_000;
-      });
-    }
-
-    switch (sortBy) {
-      case "tvl":
-        result = result.slice().sort((a, b) => (b.tvl_usd ?? 0) - (a.tvl_usd ?? 0));
-        break;
-      case "novelty":
-        result = result.slice().sort((a, b) => (b.apy_7d ?? -Infinity) - (a.apy_7d ?? -Infinity));
-        break;
-      case "apy":
-      default:
-        result = result.slice().sort((a, b) => (b.apy ?? 0) - (a.apy ?? 0));
-        break;
-    }
-
-    if (onlyTop) {
-      result = result.slice(0, 10);
-    }
-
-    return result;
-  }, [fetchState.response, growthFilter, onlyNew, onlyTop, sortBy]);
-
-  const bestStrategy = useMemo(() => {
-    if (fetchState.response?.status !== "ok") {
-      return null;
-    }
-    return fetchState.response.best_strategy;
-  }, [fetchState.response]);
-
-  const previewStrategies = useMemo(() => {
-    if (!filteredStrategies.length) {
-      return bestStrategy ? [bestStrategy] : [];
-    }
-    const list: Strategy[] = [];
-    if (bestStrategy) {
-      list.push(bestStrategy);
-    }
-    filteredStrategies
-      .filter((strategy) => !bestStrategy || strategyKey(strategy) !== strategyKey(bestStrategy))
-      .slice(0, 3)
-      .forEach((item) => list.push(item));
-
-    return list;
-  }, [bestStrategy, filteredStrategies]);
-
-  const tableStrategies = useMemo(() => {
-    const bestKey = bestStrategy ? strategyKey(bestStrategy) : null;
-    return filteredStrategies.filter((item) => !bestKey || strategyKey(item) !== bestKey);
-  }, [bestStrategy, filteredStrategies]);
-
-  const totalVisible = previewStrategies.length;
-  const totalFound =
-    fetchState.response?.status === "ok"
-      ? fetchState.response.statistics?.matched ?? filteredStrategies.length
-      : 0;
-
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    if (!token.trim()) {
-      setFetchState((prev) => ({
-        ...prev,
-        error: "Укажи тикер токена",
-      }));
-      return;
-    }
-    bypassRef.current = true;
-    triggerFetch();
+  const handleSelectChange = (event: ChangeEvent<HTMLSelectElement>) => {
+    const { name, value } = event.target;
+    setFilters((prev) => ({ ...prev, [name]: value }));
   };
 
-  const showLoadingGenie = fetchState.isLoading || fetchState.isRefreshing;
-  const genieMode = fetchState.isLoading ? "search" : "refresh";
+  const handleNumberChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = event.target;
+    const numeric = Number(value);
+    setFilters((prev) => ({ ...prev, [name]: Number.isNaN(numeric) ? prev[name as keyof FiltersState] : numeric }));
+  };
+
+  const sortOptions: Array<{ value: FiltersState["sort"]; label: string }> = useMemo(
+    () => [
+      { value: "ai_score_desc", label: "AI Score" },
+      { value: "apy_desc", label: "APY" },
+      { value: "tvl_desc", label: "TVL" },
+      { value: "tvl_growth_desc", label: "Рост TVL" },
+    ],
+    [],
+  );
+
+  const rows = fetchState.items;
 
   return (
-    <>
-      <form className="form" onSubmit={handleSubmit}>
-        <div className="grid-row">
-          <div className="form-row">
-            <label>Токен</label>
-            <div className="multi-select single">
-              <button
-                type="button"
-                className="multiselect-trigger"
-                onClick={() => setTokenModalOpen(true)}
-              >
-                {token || "Выбрать токен"}
-              </button>
-            </div>
-          </div>
-          <div className="form-row">
-            <label htmlFor="riskLevel">Уровень риска</label>
-            <select
-              id="riskLevel"
-              value={riskLevel}
-              onChange={(event) => setRiskLevel(event.target.value as RiskLevel)}
-            >
-              {riskOptions.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-          </div>
+    <div className="strategies-panel">
+      <header className="strategies-header">
+        <h2>Top DeFi Strategies</h2>
+        <p>
+          Подборка стратегий с учётом APY, роста TVL и риск-скоринга. Актуальность:
+          {" "}
+          {fetchState.updatedAt ? new Date(fetchState.updatedAt).toLocaleString("ru-RU") : "—"}.
+        </p>
+      </header>
+
+      <section className="strategies-filters">
+        <div className="filter-group">
+          <label htmlFor="chain-select">Сеть</label>
+          <select id="chain-select" name="chain" value={filters.chain} onChange={handleSelectChange}>
+            <option value="all">Все сети</option>
+            {chains.map((item) => (
+              <option key={item} value={item}>
+                {formatLabel(item)}
+              </option>
+            ))}
+          </select>
         </div>
 
-        <div className="form-row checkbox-row">
-          <label className="checkbox">
-            <input
-              type="checkbox"
-              checked={includeWrappers}
-              onChange={(event) => setIncludeWrappers(event.target.checked)}
-            />
-            <span>Показывать обёрнутые токены (wETH, stETH и т.д.)</span>
-          </label>
+        <div className="filter-group">
+          <label htmlFor="protocol-select">Протокол</label>
+          <select id="protocol-select" name="protocol" value={filters.protocol} onChange={handleSelectChange}>
+            <option value="all">Все протоколы</option>
+            {protocols.map((item) => (
+              <option key={item} value={item}>
+                {formatLabel(item)}
+              </option>
+            ))}
+          </select>
         </div>
 
-        <button className="submit" type="submit" disabled={!token.trim()}>
-          {fetchState.isLoading
-            ? "Ищем стратегии..."
-            : fetchState.isRefreshing && fetchState.isCached
-              ? "Обновляем..."
-              : "Найти стратегии"}
-        </button>
-      </form>
+        <div className="filter-group">
+          <label htmlFor="minTvl">Мин. TVL ($)</label>
+          <input
+            id="minTvl"
+            name="minTvl"
+            type="number"
+            min={0}
+            step={100000}
+            value={filters.minTvl}
+            onChange={handleNumberChange}
+          />
+        </div>
 
-      {showSkeleton && (fetchState.isLoading || fetchState.isRefreshing || isPending) && (
-        <StrategiesSkeleton />
-      )}
+        <div className="filter-group">
+          <label htmlFor="minApy">Мин. APY (%)</label>
+          <input
+            id="minApy"
+            name="minApy"
+            type="number"
+            min={0}
+            step={0.1}
+            value={filters.minApy}
+            onChange={handleNumberChange}
+          />
+        </div>
 
-      {showLoadingGenie && <LoadingGenie mode={genieMode} etaSeconds={etaSeconds} />}
-
-      <div className="sort-toolbar">
-        <div className="sort-toolbar__group">
-          <span className="sort-toolbar__label">Сортировать по</span>
-          <div className="sort-toolbar__options">
+        <div className="filter-group filter-group--sort">
+          <span>Сортировка</span>
+          <div className="sort-buttons">
             {sortOptions.map((option) => (
               <button
                 key={option.value}
                 type="button"
-                className={`sort-option${sortBy === option.value ? " is-active" : ""}`}
-                onClick={() => setSortBy(option.value)}
-                aria-pressed={sortBy === option.value}
+                className={`sort-option${filters.sort === option.value ? " is-active" : ""}`}
+                onClick={() => setFilters((prev) => ({ ...prev, sort: option.value }))}
               >
                 {option.label}
               </button>
             ))}
           </div>
         </div>
-        <div className="sort-toolbar__group">
-          <span className="sort-toolbar__label">Фильтры</span>
-          <div className="sort-toolbar__filters">
-            <button
-              type="button"
-              className={`toolbar-toggle${growthFilter === "apy_growth_gt_5" ? " is-active" : ""}`}
-              onClick={() =>
-                setGrowthFilter(growthFilter === "apy_growth_gt_5" ? "none" : "apy_growth_gt_5")
-              }
-              aria-pressed={growthFilter === "apy_growth_gt_5"}
-            >
-              Рост APY &gt; 5%
-            </button>
-            <button
-              type="button"
-              className={`toolbar-toggle${onlyNew ? " is-active" : ""}`}
-              onClick={() => setOnlyNew(!onlyNew)}
-              aria-pressed={onlyNew}
-            >
-              Только новые
-            </button>
-            <button
-              type="button"
-              className={`toolbar-toggle${onlyTop ? " is-active" : ""}`}
-              onClick={() => setOnlyTop(!onlyTop)}
-              aria-pressed={onlyTop}
-            >
-              Топовые
-            </button>
-          </div>
-        </div>
-      </div>
+      </section>
 
-      {fetchState.error && <div className="error-card">⚠️ {fetchState.error}</div>}
+      {error && <div className="error-card">⚠️ {error}</div>}
 
-      {fetchState.response?.status === "ok" && (
-        <div className="result-card">
-          <h3>Лучшая стратегия для {fetchState.response.token}</h3>
-
-          <div className="strategy-list">
-            {previewStrategies.map((strategy, index) => (
-              <StrategyCard
-                key={`${strategyKey(strategy)}-${index}`}
-                strategy={strategy}
-                isBest={index === 0}
-              />
-            ))}
-          </div>
-
-          <p className="stats">
-            Показано {totalVisible} стратегий из {totalFound} найденных.
-            {fetchState.lastUpdated
-              ? ` Обновлено в ${new Date(fetchState.lastUpdated).toLocaleTimeString("ru-RU")}.`
-              : ""}
-          </p>
-
-          {tableStrategies.length > 0 && (
-            <div className="view-all-toggle">
-              <button
-                type="button"
-                className="submit ghost view-all-button"
-                onClick={() => setShowAll((prev) => !prev)}
-              >
-                {showAll
-                  ? "Скрыть все стратегии"
-                  : `Показать все стратегии (${tableStrategies.length})`}
-              </button>
-            </div>
-          )}
-
-          {showAll && tableStrategies.length > 0 && (
-            <div className="table-wrapper all-strategies">
-              <table>
-                <thead>
-                  <tr>
-                    <th>#</th>
-                    <th>Протокол</th>
-                    <th>Тикер</th>
-                    <th>Сеть</th>
-                    <th>APY</th>
-                    <th>Δ APY 7д</th>
-                    <th>Риск</th>
-                    <th>TVL</th>
-                    <th>Score</th>
-                    <th>Ссылка</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {tableStrategies.map((strategy, index) => {
-                    const link =
-                      strategy.action_url ?? strategy.protocol_url ?? strategy.pool_url ?? undefined;
-                    return (
-                      <tr key={`${strategyKey(strategy)}-${index}`}>
-                        <td>{index + 1}</td>
-                        <td>{strategy.platform ?? "—"}</td>
-                        <td>{strategy.symbol ?? "—"}</td>
-                        <td>{strategy.chain ? formatLabel(strategy.chain) : "—"}</td>
-                        <td>{formatPercent(strategy.apy)}</td>
-                        <td>{formatPercent(strategy.apy_7d)}</td>
-                        <td>{strategy.risk_level ? strategy.risk_level.toUpperCase() : "—"}</td>
-                        <td>{strategy.tvl_usd ? `${formatNumber(strategy.tvl_usd, 0)} $` : "—"}</td>
-                        <td>{strategy.score !== undefined ? formatNumber(strategy.score) : "—"}</td>
-                        <td>
-                          {link ? (
-                            <a href={link} target="_blank" rel="noopener noreferrer">
-                              Открыть
-                            </a>
-                          ) : (
-                            "—"
-                          )}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
+      {isLoading ? (
+        <StrategiesSkeleton />
+      ) : (
+        <StrategyTable
+          strategies={rows}
+          total={fetchState.total}
+          onSelect={(item) => setSelectedStrategy(item)}
+        />
       )}
 
-      {fetchState.response?.status === "empty" && (
-        <div className="result-card">
-          <h3>Стратегии не найдены</h3>
-          <p>Попробуй изменить фильтры или выбрать другой токен.</p>
-        </div>
+      {selectedStrategy && (
+        <StrategyDetailModal
+          apiBaseUrl={apiBaseUrl}
+          strategy={selectedStrategy}
+          onClose={() => setSelectedStrategy(null)}
+        />
       )}
-
-      <SingleSelectionModal
-        title="Выбор токена"
-        isOpen={isTokenModalOpen}
-        options={filteredTokens}
-        selected={token}
-        query={tokenQuery}
-        onQueryChange={setTokenQuery}
-        onSelect={(value) => {
-          startTransition(() => setToken(value));
-          setTokenModalOpen(false);
-        }}
-        onClose={() => setTokenModalOpen(false)}
-        isLoading={!tokenOptions.length}
-      />
-    </>
+    </div>
   );
 }
 
-function strategyKey(strategy: Strategy): string {
-  return [
-    strategy.platform ?? "",
-    strategy.chain ?? "",
-    strategy.symbol ?? "",
-    strategy.pool_url ?? "",
-    strategy.protocol_url ?? "",
-    strategy.action_url ?? "",
-  ].join("|");
-}
-
-function StrategyCard({ strategy, isBest }: { strategy: Strategy; isBest: boolean }) {
-  const title = strategy.platform ?? strategy.symbol ?? "Неизвестный протокол";
-  const link = strategy.action_url ?? strategy.protocol_url ?? strategy.pool_url ?? undefined;
-  const apyTrend = strategy.apy_7d ?? null;
-  const isTrendPositive = (apyTrend ?? 0) >= 0;
-  const tokensLabel = (strategy.tokens ?? []).join(" / ") || strategy.symbol || "—";
-  const riskLabel = strategy.risk_level ? strategy.risk_level.toUpperCase() : "—";
-  const tvlLabel = strategy.tvl_usd ? `${formatNumber(strategy.tvl_usd, 0)} $` : "—";
-  const chainLabel = strategy.chain ? formatLabel(strategy.chain) : "Неизвестная сеть";
-
-  return (
-    <article className={`strategy-card ${isBest ? "best" : ""}`}>
-      <div className="strategy-card__header">
-        <div className="strategy-card__title">
-          <span className="strategy-avatar">{(strategy.symbol ?? "?").slice(0, 4)}</span>
-          <div>
-            <div className="strategy-card__name">{title}</div>
-            <div className="strategy-card__chain">{chainLabel}</div>
-          </div>
-        </div>
-        <div className="strategy-card__actions">
-          {isBest && <span className="strategy-card__badge">Лучшая</span>}
-          {link && (
-            <a className="strategy-card__cta" href={link} target="_blank" rel="noopener noreferrer">
-              Перейти
-            </a>
-          )}
-        </div>
-      </div>
-
-      <div className="strategy-card__meta">
-        <span>
-          <strong>Платформа:</strong> {strategy.platform ?? "—"}
-        </span>
-        <span>
-          <strong>TVL:</strong> {tvlLabel}
-        </span>
-        <span>
-          <strong>Риск:</strong> {riskLabel}
-        </span>
-      </div>
-
-      <div className="strategy-card__metrics">
-        <div className="metric">
-          <span className="metric-label">APY</span>
-          <span className="metric-value">
-            {formatPercent(strategy.apy)}
-            {apyTrend !== null && !Number.isNaN(apyTrend) && (
-              <span
-                className={`apy-trend ${isTrendPositive ? "positive" : "negative"}`}
-                title="Динамика доходности за неделю"
-              >
-                {isTrendPositive ? "▲" : "▼"} {Math.abs(apyTrend).toFixed(2)}%
-              </span>
-            )}
-          </span>
-        </div>
-        <div className="metric">
-          <span className="metric-label">Токен</span>
-          <span className="metric-value">{tokensLabel}</span>
-        </div>
-        {strategy.score !== undefined && (
-          <div className="metric">
-            <span className="metric-label">Score</span>
-            <span className="metric-value">{formatNumber(strategy.score)}</span>
-          </div>
-        )}
-      </div>
-    </article>
-  );
-}
-
-type SingleSelectionModalProps = {
-  title: string;
-  isOpen: boolean;
-  options: { value: string; label: string }[];
-  selected: string | null;
-  query: string;
-  onQueryChange: (value: string) => void;
-  onSelect: (value: string) => void;
-  onClose: () => void;
-  isLoading?: boolean;
-};
-
-function SingleSelectionModal({
-  title,
-  isOpen,
-  options,
-  selected,
-  query,
-  onQueryChange,
+function StrategyTable({
+  strategies,
+  total,
   onSelect,
-  onClose,
-  isLoading,
-}: SingleSelectionModalProps) {
-  if (!isOpen) {
-    return null;
-  }
-
+}: {
+  strategies: AggregatedStrategy[];
+  total: number;
+  onSelect: (strategy: AggregatedStrategy) => void;
+}): JSX.Element {
   return (
-    <div className="modal-backdrop" role="dialog" aria-modal="true">
-      <div className="modal">
-        <header className="modal-header">
-          <h3>{title}</h3>
-          <button type="button" onClick={onClose} aria-label="Закрыть">
-            ×
-          </button>
-        </header>
-        <div className="modal-search">
-          <input
-            type="search"
-            placeholder="Поиск по тикеру или названию"
-            value={query}
-            onChange={(event) => onQueryChange(event.target.value)}
-          />
-        </div>
-        <div className="modal-content">
-          {isLoading ? (
-            <p>Загружаем...</p>
-          ) : (
-            <ul>
-              {options.map((option) => (
-                <li key={option.value}>
-                  <button
-                    type="button"
-                    className={option.value === selected ? "selected" : ""}
-                    onClick={() => onSelect(option.value)}
-                  >
-                    <span>{option.label}</span>
-                  </button>
-                </li>
-              ))}
-            </ul>
+    <div className="strategy-table">
+      <div className="table-meta">Найдено стратегий: {total}</div>
+      <table>
+        <thead>
+          <tr>
+            <th>Стратегия</th>
+            <th>Протокол</th>
+            <th>Сеть</th>
+            <th>APY</th>
+            <th>TVL</th>
+            <th>Рост TVL 24ч</th>
+            <th>Риск</th>
+            <th>AI Score</th>
+            <th>Ссылка</th>
+          </tr>
+        </thead>
+        <tbody>
+          {strategies.map((strategy) => (
+            <tr
+              key={strategy.id}
+              className="strategy-row"
+              onClick={() => onSelect(strategy)}
+              tabIndex={0}
+              role="button"
+              aria-label={`Подробнее о стратегии ${strategy.name}`}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" || event.key === " ") {
+                  event.preventDefault();
+                  onSelect(strategy);
+                }
+              }}
+            >
+              <td>
+                <div className="strategy-name">
+                  {strategy.icon_url && (
+                    <img src={strategy.icon_url} alt={strategy.protocol} loading="lazy" />
+                  )}
+                  <div>
+                    <strong>{strategy.name}</strong>
+                    {strategy.token_pair && <div className="token-pair">{strategy.token_pair}</div>}
+                    {strategy.ai_comment && <div className="ai-comment">{strategy.ai_comment}</div>}
+                  </div>
+                </div>
+              </td>
+              <td>{formatLabel(strategy.protocol)}</td>
+              <td>{formatLabel(strategy.chain)}</td>
+              <td>{formatPercent(strategy.apy)}</td>
+              <td>{formatNumber(strategy.tvl_usd, 0)} $</td>
+              <td className={strategy.tvl_growth_24h >= 0 ? "positive" : "negative"}>
+                {formatPercent(strategy.tvl_growth_24h)}
+              </td>
+              <td>{strategy.risk_index !== null ? strategy.risk_index.toFixed(2) : "—"}</td>
+              <td>{strategy.ai_score !== null && strategy.ai_score !== undefined ? strategy.ai_score.toFixed(2) : "—"}</td>
+              <td>
+                {strategy.url ? (
+                  <a href={strategy.url} target="_blank" rel="noopener noreferrer">
+                    Открыть
+                  </a>
+                ) : (
+                  "—"
+                )}
+              </td>
+            </tr>
+          ))}
+          {strategies.length === 0 && (
+            <tr>
+              <td colSpan={9} className="empty-state">
+                Подходящих стратегий пока нет. Попробуй изменить фильтры.
+              </td>
+            </tr>
           )}
-        </div>
-      </div>
+        </tbody>
+      </table>
     </div>
   );
 }
