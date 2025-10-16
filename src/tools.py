@@ -14,7 +14,10 @@ from src.utils.tokens import classify_pair, contains_wrapper, parse_tokens
 
 API_URL = "https://yields.llama.fi/pools"
 PROTOCOL_URL_TMPL = "https://api.llama.fi/protocol/{slug}"
-TOKEN_CACHE_DURATION = timedelta(minutes=5)
+TOKEN_CACHE_DURATION = timedelta(minutes=2)  # Более частое обновление для поиска новых пулов
+
+# Минимальный TVL для рассмотрения стратегий (в USD)
+MIN_TVL_USD = 1_000_000
 
 RISK_LEVELS = {
     "низкий": 1,
@@ -42,9 +45,16 @@ _token_cache: Dict[str, TokenPoolCache] = {}
 def _fetch_pools_for_token(token: str, limit: int) -> List[Dict[str, Any]]:
     data = POOL_INDEX.get_pools(token)
     if data:
+        # Фильтруем по минимальному TVL
+        filtered_data = []
+        for pool in data:
+            tvl_usd = float(pool.get("tvlUsd") or pool.get("tvl_usd") or 0.0)
+            if tvl_usd >= MIN_TVL_USD:
+                filtered_data.append(pool)
+        
         if limit:
-            return data[:limit]
-        return data
+            return filtered_data[:limit]
+        return filtered_data
 
     def fetch(params: Dict[str, Any]) -> List[Dict[str, Any]]:
         try:
@@ -58,11 +68,18 @@ def _fetch_pools_for_token(token: str, limit: int) -> List[Dict[str, Any]]:
     # Try exact symbol lookup first (fast, small payload)
     exact = fetch({"symbol": token})
     if exact:
-        return exact[:limit] if limit else exact
+        # Фильтруем по минимальному TVL
+        filtered_exact = []
+        for pool in exact:
+            tvl_usd = float(pool.get("tvlUsd") or pool.get("tvl_usd") or 0.0)
+            if tvl_usd >= MIN_TVL_USD:
+                filtered_exact.append(pool)
+        return filtered_exact[:limit] if limit else filtered_exact
 
+    # Агрессивный поиск: увеличиваем лимит для поиска большего количества пулов
     search_params: Dict[str, Any] = {"search": token}
     if limit:
-        search_params["limit"] = str(limit * 2)
+        search_params["limit"] = str(limit * 4)  # Увеличиваем в 4 раза для более широкого поиска
     results = fetch(search_params)
 
     filtered: List[Dict[str, Any]] = []
@@ -71,9 +88,12 @@ def _fetch_pools_for_token(token: str, limit: int) -> List[Dict[str, Any]]:
         symbol = pool.get("symbol") or ""
         tokens = parse_tokens(symbol)
         if token_upper in tokens:
-            filtered.append(pool)
-            if limit and len(filtered) >= limit:
-                break
+            # Проверяем минимальный TVL
+            tvl_usd = float(pool.get("tvlUsd") or pool.get("tvl_usd") or 0.0)
+            if tvl_usd >= MIN_TVL_USD:
+                filtered.append(pool)
+                if limit and len(filtered) >= limit:
+                    break
     return filtered
 
 
@@ -300,14 +320,82 @@ def _decorate_pool(pool: Dict[str, Any]) -> Dict[str, Any]:
     }
 
 
+def force_refresh_all_pools() -> None:
+    """Принудительно обновляет все кэши пулов."""
+    global _token_cache
+    _token_cache.clear()  # Очищаем кэш токенов
+    POOL_INDEX.ensure_loaded(force=True)  # Принудительно перезагружаем индекс
+
+
+def discover_new_pools(token: str, limit: int = 100, force_refresh: bool = True) -> List[Dict[str, Any]]:
+    """Агрессивный поиск новых пулов для заданного токена."""
+    # Принудительно обновляем кэш для поиска новых пулов
+    raw_pools = _ensure_token_cache(token, limit=limit * 5, force_refresh=force_refresh)
+    
+    # Ищем все пулы с токеном, включая новые
+    all_pools = []
+    for pool in raw_pools:
+        if not _token_matches(pool, token):
+            continue
+        
+        # Проверяем минимальный TVL
+        tvl_usd = float(pool.get("tvlUsd") or pool.get("tvl_usd") or 0.0)
+        if tvl_usd < MIN_TVL_USD:
+            continue
+            
+        decorated = _decorate_pool(pool)
+        all_pools.append(decorated)
+
+    # Сортируем по комбинированному скору (APY + TVL + новизна)
+    def discovery_sort_key(item: Dict[str, Any]) -> tuple:
+        apy = float(item.get("apy") or 0)
+        tvl = float(item.get("tvl_usd") or 0)
+        risk_value = RISK_LEVELS.get(item["risk_level"], 3)
+        
+        # Бонус за высокий APY и TVL
+        apy_bonus = min(apy / 10, 5)  # Бонус до 5 за высокий APY
+        tvl_bonus = min(tvl / 10_000_000, 3)  # Бонус до 3 за высокий TVL
+        risk_penalty = risk_value * 0.5  # Штраф за риск
+        
+        discovery_score = apy_bonus + tvl_bonus - risk_penalty
+        
+        return (-discovery_score, -apy, -tvl)
+
+    all_pools.sort(key=discovery_sort_key)
+    return all_pools[:limit]
+
+
 def get_opportunities(token: str, limit: int = 50, force_refresh: bool = False) -> List[Dict[str, Any]]:
-    """Возвращает список лучших возможностей по заданному токену."""
-    raw_pools = _ensure_token_cache(token, limit=limit, force_refresh=force_refresh)
-    filtered = [_decorate_pool(pool) for pool in raw_pools if _token_matches(pool, token)]
+    """Возвращает список лучших возможностей по заданному токену с агрессивным поиском."""
+    # Увеличиваем лимит для более широкого поиска
+    search_limit = max(limit * 3, 150)  # Ищем в 3 раза больше пулов
+    raw_pools = _ensure_token_cache(token, limit=search_limit, force_refresh=force_refresh)
+    
+    # Фильтруем по токену и минимальному TVL
+    filtered = []
+    for pool in raw_pools:
+        if not _token_matches(pool, token):
+            continue
+        
+        # Проверяем минимальный TVL
+        tvl_usd = float(pool.get("tvlUsd") or pool.get("tvl_usd") or 0.0)
+        if tvl_usd < MIN_TVL_USD:
+            continue
+            
+        decorated = _decorate_pool(pool)
+        filtered.append(decorated)
 
     def sort_key(item: Dict[str, Any]) -> tuple:
+        # Улучшенная сортировка: приоритет APY, затем TVL, затем риск
+        apy = float(item.get("apy") or 0)
+        tvl = float(item.get("tvl_usd") or 0)
         risk_value = RISK_LEVELS.get(item["risk_level"], 3)
-        return (risk_value, -float(item["tvl_usd"] or 0), -float(item["apy"] or 0))
+        
+        # Комбинированный скор: APY * log(TVL) / risk
+        tvl_score = max(1, tvl / 1_000_000)  # Нормализуем TVL
+        combined_score = (apy * tvl_score) / max(risk_value, 0.1)
+        
+        return (-combined_score, -apy, -tvl, risk_value)
 
     filtered.sort(key=sort_key)
 

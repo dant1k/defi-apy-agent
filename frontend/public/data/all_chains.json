@@ -1,0 +1,34 @@
+[
+  {
+    "name": "Harmony",
+    "symbol": "ONE",
+    "icon": "/icons/chains/Harmony.png",
+    "logo_url": "https://coin-images.coingecko.com/coins/images/4344/large/Y88JAze.png?1696504947",
+    "chain_id": 1666600000,
+    "gecko_id": "harmony"
+  },
+  {
+    "name": "Plasma",
+    "symbol": "XPL",
+    "icon": "/icons/chains/Plasma.png",
+    "logo_url": "https://coin-images.coingecko.com/coins/images/66489/large/Plasma-symbol-green-1.png?1755142558",
+    "chain_id": 9745,
+    "gecko_id": "plasma"
+  },
+  {
+    "name": "Mantle",
+    "symbol": "MNT",
+    "icon": "/icons/chains/Mantle.png",
+    "logo_url": "https://coin-images.coingecko.com/coins/images/30980/large/Mantle-Logo-mark.png?1739213200",
+    "chain_id": 5000,
+    "gecko_id": "mantle"
+  },
+  {
+    "name": "Aurora",
+    "symbol": "AURORA",
+    "icon": "/icons/chains/Aurora.png",
+    "logo_url": "https://coin-images.coingecko.com/coins/images/20582/large/aurora.jpeg?1696519989",
+    "chain_id": 1313161554,
+    "gecko_id": "aurora-near"
+  }
+]

@@ -9,7 +9,7 @@ from typing import Dict
 
 from collector.pipeline import collect_and_store
 
-REFRESH_INTERVAL_SECONDS = int(os.getenv("AGGREGATOR_UPDATE_INTERVAL", str(15 * 60)))
+REFRESH_INTERVAL_SECONDS = int(os.getenv("AGGREGATOR_UPDATE_INTERVAL", str(5 * 60)))  # Обновляем каждые 5 минут
 INITIAL_DELAY_SECONDS = int(os.getenv("AGGREGATOR_INITIAL_DELAY", "0"))
 
 

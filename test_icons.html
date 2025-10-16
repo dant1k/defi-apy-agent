@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Icon Test</title>
+</head>
+<body>
+    <h1>Icon Test</h1>
+    
+    <h2>Local Icons (Next.js)</h2>
+    <img src="http://localhost:3001/icons/chains/Ethereum.png" alt="Ethereum" width="32" height="32">
+    <img src="http://localhost:3001/icons/chains/Bitcoin.png" alt="Bitcoin" width="32" height="32">
+    <img src="http://localhost:3001/icons/tokens/BTC.png" alt="BTC" width="32" height="32">
+    <img src="http://localhost:3001/icons/tokens/ETH.png" alt="ETH" width="32" height="32">
+    
+    <h2>Backend Icons (FastAPI)</h2>
+    <img src="http://localhost:8000/icons/chains/Arbitrum%20One.png" alt="Arbitrum" width="32" height="32">
+    <img src="http://localhost:8000/icons/chains/Blast.png" alt="Blast" width="32" height="32">
+    
+    <h2>Protocol Icons</h2>
+    <img src="http://localhost:3001/icons/protocols/AAAVE.png" alt="AAVE" width="32" height="32">
+    <img src="http://localhost:3001/icons/protocols/COMPOUND.png" alt="Compound" width="32" height="32">
+    
+    <script>
+        // Test icon loading
+        document.querySelectorAll('img').forEach(img => {
+            img.onload = () => console.log('✓ Loaded:', img.src);
+            img.onerror = () => console.log('✗ Failed:', img.src);
+        });
+    </script>
+</body>
+</html>
+

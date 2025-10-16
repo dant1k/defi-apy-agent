@@ -12,7 +12,7 @@ from langgraph.graph import StateGraph
 from langgraph.runtime import Runtime
 from typing_extensions import TypedDict
 
-from src.tools import APIError, analyze_strategies, get_opportunities, get_risk_description
+from src.tools import APIError, analyze_strategies, get_opportunities, get_risk_description, discover_new_pools
 from src.utils.constants import DEFAULT_USER_PREFERENCES, SUPPORTED_RISK_LEVELS
 
 
@@ -111,7 +111,19 @@ def fetch_opportunities(state: AgentState, runtime: Runtime[Context]) -> Dict[st
     force_refresh = bool(context.get("force_refresh", False))
 
     try:
+        # Сначала пробуем обычный поиск
         opportunities = get_opportunities(state["token"], limit=limit, force_refresh=force_refresh)
+        
+        # Если найдено мало результатов, используем агрессивный поиск новых пулов
+        if len(opportunities) < limit // 2:
+            new_pools = discover_new_pools(state["token"], limit=limit, force_refresh=True)
+            # Объединяем результаты, убирая дубликаты
+            existing_ids = {pool.get("pool_id") for pool in opportunities}
+            for pool in new_pools:
+                if pool.get("pool_id") not in existing_ids:
+                    opportunities.append(pool)
+                    if len(opportunities) >= limit:
+                        break
     except APIError as exc:
         return {"error": str(exc)}
 

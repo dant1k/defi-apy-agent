@@ -2,6 +2,93 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Custom Select Styles */
+.custom-select {
+  position: relative;
+  display: inline-block;
+  min-width: 200px;
+}
+
+.custom-select__trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background: #1a1d29;
+  border: 1px solid #2d3142;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-height: 40px;
+}
+
+.custom-select__trigger:hover {
+  border-color: #4a5568;
+}
+
+.custom-select__trigger.is-open {
+  border-color: #667eea;
+  box-shadow: 0 0 0 1px #667eea;
+}
+
+.custom-select__value {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+}
+
+.custom-select__value img {
+  border-radius: 4px;
+}
+
+.custom-select__arrow {
+  color: #a0aec0;
+  transition: transform 0.2s ease;
+  font-size: 12px;
+}
+
+.custom-select__trigger.is-open .custom-select__arrow {
+  transform: rotate(180deg);
+}
+
+.custom-select__options {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: #1a1d29;
+  border: 1px solid #2d3142;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  z-index: 1000;
+  max-height: 200px;
+  overflow-y: auto;
+  margin-top: 4px;
+}
+
+.custom-select__option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.custom-select__option:hover {
+  background: #2d3142;
+}
+
+.custom-select__option.is-selected {
+  background: #667eea;
+  color: white;
+}
+
+.custom-select__option img {
+  border-radius: 4px;
+}
+
 :root {
   color-scheme: light dark;
   font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;

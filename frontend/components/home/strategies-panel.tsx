@@ -1,4 +1,4 @@
-import { ChangeEvent, useEffect, useMemo, useState } from "react";
+import { ChangeEvent, useEffect, useMemo, useState, useRef } from "react";
 import dynamic from "next/dynamic";
 import type { AggregatedStrategy, FiltersState } from "./types";
 import { formatLabel, formatNumber, formatPercent } from "./formatters";
@@ -14,6 +14,7 @@ type StrategiesPanelProps = {
   apiBaseUrl: string;
   chains: string[];
   protocols: string[];
+  tokens?: string[];
 };
 
 type FetchState = {
@@ -25,6 +26,7 @@ type FetchState = {
 const DEFAULT_FILTERS: FiltersState = {
   chain: "all",
   protocol: "all",
+  token: "all",
   minTvl: 1_000_000,
   minApy: 0,
   sort: "ai_score_desc",
@@ -32,12 +34,13 @@ const DEFAULT_FILTERS: FiltersState = {
 
 const PAGE_LIMIT = 150;
 
-export default function StrategiesPanel({ apiBaseUrl, chains, protocols }: StrategiesPanelProps): JSX.Element {
+export default function StrategiesPanel({ apiBaseUrl, chains, protocols, tokens = [] }: StrategiesPanelProps): JSX.Element {
   const [filters, setFilters] = useState<FiltersState>(DEFAULT_FILTERS);
   const [fetchState, setFetchState] = useState<FetchState>({ items: [], total: 0, updatedAt: null });
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedStrategy, setSelectedStrategy] = useState<AggregatedStrategy | null>(null);
+  // удалён текстовый поиск по токену
 
   useEffect(() => {
     const controller = new AbortController();
@@ -57,7 +60,11 @@ export default function StrategiesPanel({ apiBaseUrl, chains, protocols }: Strat
           },
           controller.signal,
         );
-        setFetchState({ items: response.items, total: response.total, updatedAt: response.updated_at });
+        const fetched = response.items;
+        const filteredByToken = filters.token && filters.token !== "all"
+          ? fetched.filter((it) => (it.token_pair || "").toUpperCase().includes((filters.token || "").toUpperCase()))
+          : fetched;
+        setFetchState({ items: filteredByToken, total: filteredByToken.length, updatedAt: response.updated_at });
       } catch (err) {
         if (!controller.signal.aborted) {
           const message = err instanceof Error ? err.message : "Не удалось загрузить данные";
@@ -95,15 +102,31 @@ export default function StrategiesPanel({ apiBaseUrl, chains, protocols }: Strat
     [],
   );
 
+  function getChainIconUrl(name: string): string {
+    // Нормализуем имя для файла
+    const file = name?.toUpperCase().replace(/[^A-Z0-9]/g, "");
+    return `/icons/chains/${encodeURIComponent(file)}.png`;
+  }
+
+  function getTokenIconUrl(symbol: string): string {
+    return `/icons/tokens/${encodeURIComponent(symbol)}.png`;
+  }
+
+  function getProtocolIconUrl(name: string): string {
+    // нормализуем имя протокола для поиска в DeFiLlama иконках
+    const file = name?.toUpperCase().replace(/[^A-Z0-9]/g, "");
+    return `/icons/protocols/${encodeURIComponent(file)}.png`;
+  }
+
   const rows = fetchState.items;
+
 
   return (
     <div className="strategies-panel">
       <header className="strategies-header">
         <h2>Top DeFi Strategies</h2>
         <p>
-          Подборка стратегий с учётом APY, роста TVL и риск-скоринга. Актуальность:
-          {" "}
+          Подборка стратегий с учётом APY, роста TVL и риск-скоринга. Актуальность:{" "}
           {fetchState.updatedAt ? new Date(fetchState.updatedAt).toLocaleString("ru-RU") : "—"}.
         </p>
       </header>
@@ -111,27 +134,56 @@ export default function StrategiesPanel({ apiBaseUrl, chains, protocols }: Strat
       <section className="strategies-filters">
         <div className="filter-group">
           <label htmlFor="chain-select">Сеть</label>
-          <select id="chain-select" name="chain" value={filters.chain} onChange={handleSelectChange}>
-            <option value="all">Все сети</option>
-            {chains.map((item) => (
-              <option key={item} value={item}>
-                {formatLabel(item)}
-              </option>
-            ))}
-          </select>
+          <CustomSelect
+            value={filters.chain}
+            onChange={(value) => setFilters(prev => ({ ...prev, chain: value }))}
+            options={[
+              { value: "all", label: "Все сети", icon: null },
+              ...chains.map(item => ({
+                value: item,
+                label: formatLabel(item),
+                icon: getChainIconUrl(item)
+              }))
+            ]}
+            placeholder="Выберите сеть"
+          />
         </div>
 
         <div className="filter-group">
           <label htmlFor="protocol-select">Протокол</label>
-          <select id="protocol-select" name="protocol" value={filters.protocol} onChange={handleSelectChange}>
-            <option value="all">Все протоколы</option>
-            {protocols.map((item) => (
-              <option key={item} value={item}>
-                {formatLabel(item)}
-              </option>
-            ))}
-          </select>
+          <CustomSelect
+            value={filters.protocol}
+            onChange={(value) => setFilters(prev => ({ ...prev, protocol: value }))}
+            options={[
+              { value: "all", label: "Все протоколы", icon: null },
+              ...protocols.map(item => ({
+                value: item,
+                label: formatLabel(item),
+                icon: getProtocolIconUrl(item)
+              }))
+            ]}
+            placeholder="Выберите протокол"
+          />
         </div>
+
+        <div className="filter-group">
+          <label htmlFor="token-select">Токен</label>
+          <CustomSelect
+            value={filters.token}
+            onChange={(value) => setFilters(prev => ({ ...prev, token: value }))}
+            options={[
+              { value: "all", label: "Все токены", icon: null },
+              ...tokens.map(symbol => ({
+                value: symbol,
+                label: symbol,
+                icon: getTokenIconUrl(symbol)
+              }))
+            ]}
+            placeholder="Выберите токен"
+          />
+        </div>
+
+        {/* Поле поиска по токену удалено по просьбе пользователя */}
 
         <div className="filter-group">
           <label htmlFor="minTvl">Мин. TVL ($)</label>
@@ -183,8 +235,9 @@ export default function StrategiesPanel({ apiBaseUrl, chains, protocols }: Strat
       ) : (
         <StrategyTable
           strategies={rows}
-          total={fetchState.total}
+          total={rows.length}
           onSelect={(item) => setSelectedStrategy(item)}
+          getChainIconUrl={getChainIconUrl}
         />
       )}
 
@@ -203,10 +256,12 @@ function StrategyTable({
   strategies,
   total,
   onSelect,
+  getChainIconUrl,
 }: {
   strategies: AggregatedStrategy[];
   total: number;
   onSelect: (strategy: AggregatedStrategy) => void;
+  getChainIconUrl: (name: string) => string;
 }): JSX.Element {
   return (
     <div className="strategy-table">
@@ -253,8 +308,20 @@ function StrategyTable({
                   </div>
                 </div>
               </td>
-              <td>{formatLabel(strategy.protocol)}</td>
-              <td>{formatLabel(strategy.chain)}</td>
+              <td>
+                <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+                  {strategy.icon_url && (
+                    <img src={strategy.icon_url} alt="" width={16} height={16} loading="lazy" onError={(e) => ((e.currentTarget.style.display = "none"))} />
+                  )}
+                  {formatLabel(strategy.protocol)}
+                </span>
+              </td>
+              <td>
+                <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+                  <img src={getChainIconUrl(strategy.chain)} alt="" width={16} height={16} loading="lazy" onError={(e) => ((e.currentTarget.style.display = "none"))} />
+                  {formatLabel(strategy.chain)}
+                </span>
+              </td>
               <td>{formatPercent(strategy.apy)}</td>
               <td>{formatNumber(strategy.tvl_usd, 0)} $</td>
               <td className={strategy.tvl_growth_24h >= 0 ? "positive" : "negative"}>
@@ -282,6 +349,127 @@ function StrategyTable({
           )}
         </tbody>
       </table>
+    </div>
+  );
+}
+
+// Icon with Fallback Component
+type IconWithFallbackProps = {
+  src: string;
+  alt: string;
+  width?: number;
+  height?: number;
+  className?: string;
+};
+
+function IconWithFallback({ src, alt, width = 18, height = 18, className }: IconWithFallbackProps) {
+  const [currentSrc, setCurrentSrc] = useState(src);
+  const [hasError, setHasError] = useState(false);
+
+  const handleError = () => {
+    if (!hasError && currentSrc.startsWith('/icons/')) {
+      // Если локальная иконка не найдена, пробуем через бекенд
+      const backendSrc = currentSrc.replace('/icons/', 'http://localhost:8000/icons/');
+      setCurrentSrc(backendSrc);
+      setHasError(true);
+    } else {
+      // Скрываем иконку, если и бекенд не помог
+      setCurrentSrc('');
+    }
+  };
+
+  if (!currentSrc) {
+    return null;
+  }
+
+  return (
+    <img 
+      src={currentSrc} 
+      alt={alt} 
+      width={width} 
+      height={height} 
+      loading="lazy" 
+      onError={handleError}
+      className={className}
+    />
+  );
+}
+
+// Custom Select Component with Icons
+type SelectOption = {
+  value: string;
+  label: string;
+  icon: string | null;
+};
+
+type CustomSelectProps = {
+  value: string;
+  onChange: (value: string) => void;
+  options: SelectOption[];
+  placeholder?: string;
+};
+
+function CustomSelect({ value, onChange, options, placeholder }: CustomSelectProps) {
+  const [isOpen, setIsOpen] = useState(false);
+  const selectRef = useRef<HTMLDivElement>(null);
+
+  const selectedOption = options.find(option => option.value === value);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (selectRef.current && !selectRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  return (
+    <div className="custom-select" ref={selectRef}>
+      <div 
+        className={`custom-select__trigger ${isOpen ? 'is-open' : ''}`}
+        onClick={() => setIsOpen(!isOpen)}
+      >
+        <div className="custom-select__value">
+          {selectedOption?.icon && (
+            <IconWithFallback 
+              src={selectedOption.icon} 
+              alt="" 
+              width={18} 
+              height={18}
+            />
+          )}
+          <span>{selectedOption?.label || placeholder}</span>
+        </div>
+        <div className="custom-select__arrow">▼</div>
+      </div>
+      
+      {isOpen && (
+        <div className="custom-select__options">
+          {options.map((option) => (
+            <div
+              key={option.value}
+              className={`custom-select__option ${option.value === value ? 'is-selected' : ''}`}
+              onClick={() => {
+                onChange(option.value);
+                setIsOpen(false);
+              }}
+            >
+              {option.icon && (
+                <IconWithFallback 
+                  src={option.icon} 
+                  alt="" 
+                  width={18} 
+                  height={18}
+                />
+              )}
+              <span>{option.label}</span>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

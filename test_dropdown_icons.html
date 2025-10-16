@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Dropdown Icons Test</title>
+    <style>
+        body { 
+            background: #10121a; 
+            color: #e5ecff; 
+            font-family: Inter, sans-serif; 
+            padding: 20px;
+        }
+        .test-section { 
+            margin: 20px 0; 
+            padding: 20px; 
+            border: 1px solid #2d3142; 
+            border-radius: 8px;
+        }
+        .icon-test {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 10px 0;
+        }
+        .icon-test img {
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 Dropdown Icons Test</h1>
+    
+    <div class="test-section">
+        <h2>🌐 Chain Icons</h2>
+        <div class="icon-test">
+            <img src="http://localhost:3001/icons/chains/Ethereum.png" alt="Ethereum" width="24" height="24">
+            <span>Ethereum (local)</span>
+        </div>
+        <div class="icon-test">
+            <img src="http://localhost:3001/icons/chains/Acala.png" alt="Acala" width="24" height="24">
+            <span>Acala (local)</span>
+        </div>
+        <div class="icon-test">
+            <img src="http://localhost:8000/icons/chains/Acala.png" alt="Acala" width="24" height="24">
+            <span>Acala (backend)</span>
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h2>🪙 Token Icons</h2>
+        <div class="icon-test">
+            <img src="http://localhost:3001/icons/tokens/BTC.png" alt="BTC" width="24" height="24">
+            <span>BTC (local)</span>
+        </div>
+        <div class="icon-test">
+            <img src="http://localhost:3001/icons/tokens/ETH.png" alt="ETH" width="24" height="24">
+            <span>ETH (local)</span>
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h2>🏛️ Protocol Icons</h2>
+        <div class="icon-test">
+            <img src="http://localhost:3001/icons/protocols/AAAVE.png" alt="AAVE" width="24" height="24">
+            <span>AAVE (local)</span>
+        </div>
+        <div class="icon-test">
+            <img src="http://localhost:8000/icons/protocols/AAVEV3.png" alt="AAVE V3" width="24" height="24">
+            <span>AAVE V3 (backend)</span>
+        </div>
+    </div>
+    
+    <script>
+        // Test icon loading
+        document.querySelectorAll('img').forEach(img => {
+            img.onload = () => console.log('✓ Loaded:', img.src);
+            img.onerror = () => console.log('✗ Failed:', img.src);
+        });
+    </script>
+</body>
+</html>
+

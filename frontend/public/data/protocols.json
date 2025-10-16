@@ -1,0 +1,42 @@
+[
+  {
+    "name": "Base",
+    "id": "base",
+    "icon": "/icons/chains/Base.png"
+  },
+  {
+    "name": "Solana",
+    "id": "solana",
+    "icon": "/icons/chains/Solana.png"
+  },
+  {
+    "name": "Aptos",
+    "id": "aptos",
+    "icon": "/icons/chains/Aptos.png"
+  },
+  {
+    "name": "Fantom",
+    "id": "fantom",
+    "icon": "/icons/chains/Fantom.png"
+  },
+  {
+    "name": "Mantle",
+    "id": "mantle",
+    "icon": "/icons/chains/Mantle.png"
+  },
+  {
+    "name": "Arbitrum One",
+    "id": "arbitrum-one",
+    "icon": "/icons/chains/Arbitrum One.png"
+  },
+  {
+    "name": "Ethereum",
+    "id": "ethereum",
+    "icon": "/icons/chains/Ethereum.png"
+  },
+  {
+    "name": "Cronos",
+    "id": "cronos",
+    "icon": "/icons/chains/Cronos.png"
+  }
+]

@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Icon Display Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .icon-test { margin: 20px 0; padding: 10px; border: 1px solid #ccc; }
+        .icon-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; }
+        .icon-item { display: flex; align-items: center; gap: 10px; padding: 5px; }
+        .icon-item img { width: 24px; height: 24px; }
+        .missing { color: red; }
+        .found { color: green; }
+    </style>
+</head>
+<body>
+    <h1>🔍 Тест отображения иконок</h1>
+    
+    <div class="icon-test">
+        <h2>Сети (Chains)</h2>
+        <div class="icon-grid" id="chains-grid"></div>
+    </div>
+    
+    <div class="icon-test">
+        <h2>Протоколы (Protocols)</h2>
+        <div class="icon-grid" id="protocols-grid"></div>
+    </div>
+    
+    <div class="icon-test">
+        <h2>Токены (Tokens)</h2>
+        <div class="icon-grid" id="tokens-grid"></div>
+    </div>
+
+    <script>
+        // Тестовые данные из API
+        const testData = {
+            chains: ["Base", "Aptos", "Linea", "Ethereum", "Arbitrum", "BSC", "Polygon"],
+            protocols: ["aerodrome-slipstream", "hyperion", "etherex-cl", "convex-finance", "curve-dex", "uniswap-v3"],
+            tokens: ["WETH", "USDC", "APT", "CBBTC", "ETH", "BTC", "DAI", "USDT"]
+        };
+
+        function normalizeName(name, category) {
+            if (category === "chains") {
+                return name.toUpperCase().replace(/[^A-Z0-9]/g, "");
+            } else if (category === "protocols") {
+                return name.toUpperCase().replace(/[^A-Z0-9]/g, "");
+            } else {
+                return name.toUpperCase();
+            }
+        }
+
+        function testIcon(category, name, container) {
+            const normalized = normalizeName(name, category);
+            const iconUrl = `/icons/${category}/${normalized}.png`;
+            const apiUrl = `http://localhost:8000/icons/${category}/${normalized}.png`;
+            
+            const item = document.createElement('div');
+            item.className = 'icon-item';
+            
+            const img = document.createElement('img');
+            img.src = iconUrl;
+            img.alt = name;
+            
+            const label = document.createElement('span');
+            label.textContent = `${name} (${normalized})`;
+            
+            img.onload = function() {
+                item.className += ' found';
+                label.textContent += ' ✅';
+            };
+            
+            img.onerror = function() {
+                item.className += ' missing';
+                label.textContent += ' ❌';
+                // Пробуем API как fallback
+                img.src = apiUrl;
+                img.onload = function() {
+                    item.className = 'icon-item found';
+                    label.textContent = `${name} (${normalized}) ✅ (API)`;
+                };
+            };
+            
+            item.appendChild(img);
+            item.appendChild(label);
+            container.appendChild(item);
+        }
+
+        // Тестируем иконки
+        Object.keys(testData).forEach(category => {
+            const container = document.getElementById(`${category}-grid`);
+            testData[category].forEach(name => {
+                testIcon(category, name, container);
+            });
+        });
+    </script>
+</body>
+</html>
+

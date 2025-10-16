@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Icon Display Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .icon-test { margin: 10px 0; padding: 10px; border: 1px solid #ccc; }
+        .icon-test img { margin-right: 10px; vertical-align: middle; }
+        .status { font-weight: bold; }
+        .success { color: green; }
+        .error { color: red; }
+        .loading { color: orange; }
+    </style>
+</head>
+<body>
+    <h1>Тест отображения иконок</h1>
+    
+    <h2>Chains (Сети)</h2>
+    <div id="chains-test"></div>
+    
+    <h2>Protocols (Протоколы)</h2>
+    <div id="protocols-test"></div>
+    
+    <h2>Tokens (Токены)</h2>
+    <div id="tokens-test"></div>
+
+    <script>
+        // Функция для тестирования иконки
+        function testIcon(category, name, filename) {
+            return new Promise((resolve) => {
+                const img = new Image();
+                const testDiv = document.createElement('div');
+                testDiv.className = 'icon-test';
+                
+                img.onload = () => {
+                    testDiv.innerHTML = `<img src="${img.src}" width="24" height="24" alt="${name}"> <span class="status success">✓</span> ${name} (${filename})`;
+                    resolve({ success: true, div: testDiv });
+                };
+                
+                img.onerror = () => {
+                    testDiv.innerHTML = `<span class="status error">✗</span> ${name} (${filename}) - не найдена`;
+                    resolve({ success: false, div: testDiv });
+                };
+                
+                // Сначала пробуем локальный путь
+                img.src = `/icons/${category}/${filename}`;
+            });
+        }
+
+        // Тестовые данные
+        const testData = {
+            chains: [
+                { name: 'Ethereum', filename: 'ETHEREUM.png' },
+                { name: 'Arbitrum', filename: 'ARBITRUM.png' },
+                { name: 'Polygon', filename: 'POLYGON.png' },
+                { name: 'Base', filename: 'BASE.png' },
+                { name: 'Optimism', filename: 'OPTIMISM.png' }
+            ],
+            protocols: [
+                { name: 'Uniswap', filename: 'UNISWAP.png' },
+                { name: 'Aave', filename: 'AAVE.png' },
+                { name: 'Compound', filename: 'COMPOUND.png' },
+                { name: 'Curve', filename: 'CURVE.png' },
+                { name: 'Balancer', filename: 'BALANCER.png' }
+            ],
+            tokens: [
+                { name: 'USDC', filename: 'USDC.png' },
+                { name: 'USDT', filename: 'USDT.png' },
+                { name: 'WETH', filename: 'WETH.png' },
+                { name: 'DAI', filename: 'DAI.png' },
+                { name: 'WBTC', filename: 'WBTC.png' }
+            ]
+        };
+
+        // Запускаем тесты
+        async function runTests() {
+            for (const [category, items] of Object.entries(testData)) {
+                const container = document.getElementById(`${category}-test`);
+                container.innerHTML = '<div class="loading">Загрузка...</div>';
+                
+                const results = [];
+                for (const item of items) {
+                    const result = await testIcon(category, item.name, item.filename);
+                    results.push(result);
+                }
+                
+                container.innerHTML = '';
+                results.forEach(result => {
+                    container.appendChild(result.div);
+                });
+                
+                const successCount = results.filter(r => r.success).length;
+                const totalCount = results.length;
+                const summary = document.createElement('div');
+                summary.innerHTML = `<strong>Результат: ${successCount}/${totalCount} иконок загружены</strong>`;
+                container.appendChild(summary);
+            }
+        }
+
+        // Запускаем тесты при загрузке страницы
+        window.onload = runTests;
+    </script>
+</body>
+</html>

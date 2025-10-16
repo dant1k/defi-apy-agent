@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Fallback Icons Test</title>
+    <style>
+        body { 
+            background: #10121a; 
+            color: #e5ecff; 
+            font-family: Inter, sans-serif; 
+            padding: 20px;
+        }
+        .test-section { 
+            margin: 20px 0; 
+            padding: 20px; 
+            border: 1px solid #2d3142; 
+            border-radius: 8px;
+        }
+        .icon-test {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 10px 0;
+        }
+        .icon-test img {
+            border-radius: 4px;
+        }
+        .status {
+            font-weight: bold;
+        }
+        .success { color: #4ade80; }
+        .error { color: #f87171; }
+    </style>
+</head>
+<body>
+    <h1>🧪 Fallback Icons Test</h1>
+    
+    <div class="test-section">
+        <h2>🌐 Chain Icons (Local → Backend)</h2>
+        <div class="icon-test">
+            <img src="http://localhost:3001/icons/chains/Ethereum.png" alt="Ethereum" width="24" height="24" onload="this.nextElementSibling.textContent='✓ Local'" onerror="this.nextElementSibling.textContent='✗ Local'">
+            <span class="status">Ethereum</span>
+        </div>
+        <div class="icon-test">
+            <img src="http://localhost:3001/icons/chains/Berachain.png" alt="Berachain" width="24" height="24" onload="this.nextElementSibling.textContent='✓ Backend'" onerror="this.nextElementSibling.textContent='✗ Backend'">
+            <span class="status">Berachain</span>
+        </div>
+        <div class="icon-test">
+            <img src="http://localhost:3001/icons/chains/Bitlayer.png" alt="Bitlayer" width="24" height="24" onload="this.nextElementSibling.textContent='✓ Backend'" onerror="this.nextElementSibling.textContent='✗ Backend'">
+            <span class="status">Bitlayer</span>
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h2>🪙 Token Icons</h2>
+        <div class="icon-test">
+            <img src="http://localhost:3001/icons/tokens/BTC.png" alt="BTC" width="24" height="24" onload="this.nextElementSibling.textContent='✓ Local'" onerror="this.nextElementSibling.textContent='✗ Local'">
+            <span class="status">BTC</span>
+        </div>
+        <div class="icon-test">
+            <img src="http://localhost:3001/icons/tokens/ETH.png" alt="ETH" width="24" height="24" onload="this.nextElementSibling.textContent='✓ Local'" onerror="this.nextElementSibling.textContent='✗ Local'">
+            <span class="status">ETH</span>
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h2>🏛️ Protocol Icons</h2>
+        <div class="icon-test">
+            <img src="http://localhost:3001/icons/protocols/AAAVE.png" alt="AAVE" width="24" height="24" onload="this.nextElementSibling.textContent='✓ Local'" onerror="this.nextElementSibling.textContent='✗ Local'">
+            <span class="status">AAVE</span>
+        </div>
+        <div class="icon-test">
+            <img src="http://localhost:8000/icons/protocols/AAVEV3.png" alt="AAVE V3" width="24" height="24" onload="this.nextElementSibling.textContent='✓ Backend'" onerror="this.nextElementSibling.textContent='✗ Backend'">
+            <span class="status">AAVE V3</span>
+        </div>
+    </div>
+    
+    <script>
+        // Test icon loading
+        document.querySelectorAll('img').forEach(img => {
+            img.onload = () => {
+                console.log('✓ Loaded:', img.src);
+                img.nextElementSibling.classList.add('success');
+            };
+            img.onerror = () => {
+                console.log('✗ Failed:', img.src);
+                img.nextElementSibling.classList.add('error');
+            };
+        });
+    </script>
+</body>
+</html>
+
