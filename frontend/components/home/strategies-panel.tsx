@@ -1,4 +1,4 @@
-import { ChangeEvent, useEffect, useMemo, useState } from "react";
+import { ChangeEvent, useEffect, useMemo, useState, useRef } from "react";
 import dynamic from "next/dynamic";
 import type { AggregatedStrategy, FiltersState } from "./types";
 import { formatLabel, formatNumber, formatPercent } from "./formatters";
@@ -103,31 +103,24 @@ export default function StrategiesPanel({ apiBaseUrl, chains, protocols, tokens 
   );
 
   function getChainIconUrl(name: string): string {
-    return `${apiBaseUrl}/icons/chains/${encodeURIComponent(name)}.png`;
+    // Нормализуем имя для файла
+    const file = name.replace(" ", "").replace("-", "").replace("_", "").replace(".", "");
+    // Сначала пробуем локальную иконку, потом через бекенд
+    return `/icons/chains/${encodeURIComponent(file)}.png`;
   }
 
   function getTokenIconUrl(symbol: string): string {
-    return `${apiBaseUrl}/icons/tokens/${encodeURIComponent(symbol)}.png`;
+    return `/icons/tokens/${encodeURIComponent(symbol)}.png`;
   }
 
   function getProtocolIconUrl(name: string): string {
-    // многие иконки протоколов лежат напрямую в /icons/NAME.png (например, AAVE, CRV, UNI)
-    // пробуем нормализовать к верхнему регистру и дефисы убрать
+    // нормализуем имя протокола для поиска в DeFiLlama иконках
     const file = name?.toUpperCase().replace(/[^A-Z0-9]/g, "");
-    return `${apiBaseUrl}/icons/${encodeURIComponent(file)}.png`;
+    return `/icons/protocols/${encodeURIComponent(file)}.png`;
   }
 
   const rows = fetchState.items;
 
-  const selectedChainIcon = useMemo(() =>
-    filters.chain && filters.chain !== "all" ? getChainIconUrl(filters.chain) : null,
-  [filters.chain]);
-  const selectedProtocolIcon = useMemo(() =>
-    filters.protocol && filters.protocol !== "all" ? getProtocolIconUrl(filters.protocol) : null,
-  [filters.protocol]);
-  const selectedTokenIcon = useMemo(() =>
-    filters.token && filters.token !== "all" ? getTokenIconUrl(filters.token) : null,
-  [filters.token]);
 
   return (
     <div className="strategies-panel">
@@ -142,53 +135,53 @@ export default function StrategiesPanel({ apiBaseUrl, chains, protocols, tokens 
       <section className="strategies-filters">
         <div className="filter-group">
           <label htmlFor="chain-select">Сеть</label>
-          <div style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
-            {selectedChainIcon && (
-              <img src={selectedChainIcon} alt="" width={18} height={18} loading="lazy" onError={(e) => ((e.currentTarget.style.display = "none"))} />
-            )}
-            <select id="chain-select" name="chain" value={filters.chain} onChange={handleSelectChange}>
-            <option value="all">Все сети</option>
-            {chains.map((item) => (
-              <option key={item} value={item}>
-                {formatLabel(item)}
-              </option>
-            ))}
-            </select>
-          </div>
+          <CustomSelect
+            value={filters.chain}
+            onChange={(value) => setFilters(prev => ({ ...prev, chain: value }))}
+            options={[
+              { value: "all", label: "Все сети", icon: null },
+              ...chains.map(item => ({
+                value: item,
+                label: formatLabel(item),
+                icon: getChainIconUrl(item)
+              }))
+            ]}
+            placeholder="Выберите сеть"
+          />
         </div>
 
         <div className="filter-group">
           <label htmlFor="protocol-select">Протокол</label>
-          <div style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
-            {selectedProtocolIcon && (
-              <img src={selectedProtocolIcon} alt="" width={18} height={18} loading="lazy" onError={(e) => ((e.currentTarget.style.display = "none"))} />
-            )}
-            <select id="protocol-select" name="protocol" value={filters.protocol} onChange={handleSelectChange}>
-            <option value="all">Все протоколы</option>
-            {protocols.map((item) => (
-              <option key={item} value={item}>
-                {formatLabel(item)}
-              </option>
-            ))}
-            </select>
-          </div>
+          <CustomSelect
+            value={filters.protocol}
+            onChange={(value) => setFilters(prev => ({ ...prev, protocol: value }))}
+            options={[
+              { value: "all", label: "Все протоколы", icon: null },
+              ...protocols.map(item => ({
+                value: item,
+                label: formatLabel(item),
+                icon: getProtocolIconUrl(item)
+              }))
+            ]}
+            placeholder="Выберите протокол"
+          />
         </div>
 
         <div className="filter-group">
           <label htmlFor="token-select">Токен</label>
-          <div style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
-            {selectedTokenIcon && (
-              <img src={selectedTokenIcon} alt="" width={18} height={18} loading="lazy" onError={(e) => ((e.currentTarget.style.display = "none"))} />
-            )}
-            <select id="token-select" name="token" value={filters.token} onChange={handleSelectChange}>
-            <option value="all">Все токены</option>
-            {tokens.map((symbol) => (
-              <option key={symbol} value={symbol}>
-                {symbol}
-              </option>
-            ))}
-            </select>
-          </div>
+          <CustomSelect
+            value={filters.token}
+            onChange={(value) => setFilters(prev => ({ ...prev, token: value }))}
+            options={[
+              { value: "all", label: "Все токены", icon: null },
+              ...tokens.map(symbol => ({
+                value: symbol,
+                label: symbol,
+                icon: getTokenIconUrl(symbol)
+              }))
+            ]}
+            placeholder="Выберите токен"
+          />
         </div>
 
         {/* Поле поиска по токену удалено по просьбе пользователя */}
@@ -245,6 +238,7 @@ export default function StrategiesPanel({ apiBaseUrl, chains, protocols, tokens 
           strategies={rows}
           total={rows.length}
           onSelect={(item) => setSelectedStrategy(item)}
+          getChainIconUrl={getChainIconUrl}
         />
       )}
 
@@ -263,10 +257,12 @@ function StrategyTable({
   strategies,
   total,
   onSelect,
+  getChainIconUrl,
 }: {
   strategies: AggregatedStrategy[];
   total: number;
   onSelect: (strategy: AggregatedStrategy) => void;
+  getChainIconUrl: (name: string) => string;
 }): JSX.Element {
   return (
     <div className="strategy-table">
@@ -354,6 +350,127 @@ function StrategyTable({
           )}
         </tbody>
       </table>
+    </div>
+  );
+}
+
+// Icon with Fallback Component
+type IconWithFallbackProps = {
+  src: string;
+  alt: string;
+  width?: number;
+  height?: number;
+  className?: string;
+};
+
+function IconWithFallback({ src, alt, width = 18, height = 18, className }: IconWithFallbackProps) {
+  const [currentSrc, setCurrentSrc] = useState(src);
+  const [hasError, setHasError] = useState(false);
+
+  const handleError = () => {
+    if (!hasError && currentSrc.startsWith('/icons/')) {
+      // Если локальная иконка не найдена, пробуем через бекенд
+      const backendSrc = currentSrc.replace('/icons/', 'http://localhost:8000/icons/');
+      setCurrentSrc(backendSrc);
+      setHasError(true);
+    } else {
+      // Скрываем иконку, если и бекенд не помог
+      setCurrentSrc('');
+    }
+  };
+
+  if (!currentSrc) {
+    return null;
+  }
+
+  return (
+    <img 
+      src={currentSrc} 
+      alt={alt} 
+      width={width} 
+      height={height} 
+      loading="lazy" 
+      onError={handleError}
+      className={className}
+    />
+  );
+}
+
+// Custom Select Component with Icons
+type SelectOption = {
+  value: string;
+  label: string;
+  icon: string | null;
+};
+
+type CustomSelectProps = {
+  value: string;
+  onChange: (value: string) => void;
+  options: SelectOption[];
+  placeholder?: string;
+};
+
+function CustomSelect({ value, onChange, options, placeholder }: CustomSelectProps) {
+  const [isOpen, setIsOpen] = useState(false);
+  const selectRef = useRef<HTMLDivElement>(null);
+
+  const selectedOption = options.find(option => option.value === value);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (selectRef.current && !selectRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  return (
+    <div className="custom-select" ref={selectRef}>
+      <div 
+        className={`custom-select__trigger ${isOpen ? 'is-open' : ''}`}
+        onClick={() => setIsOpen(!isOpen)}
+      >
+        <div className="custom-select__value">
+          {selectedOption?.icon && (
+            <IconWithFallback 
+              src={selectedOption.icon} 
+              alt="" 
+              width={18} 
+              height={18}
+            />
+          )}
+          <span>{selectedOption?.label || placeholder}</span>
+        </div>
+        <div className="custom-select__arrow">▼</div>
+      </div>
+      
+      {isOpen && (
+        <div className="custom-select__options">
+          {options.map((option) => (
+            <div
+              key={option.value}
+              className={`custom-select__option ${option.value === value ? 'is-selected' : ''}`}
+              onClick={() => {
+                onChange(option.value);
+                setIsOpen(false);
+              }}
+            >
+              {option.icon && (
+                <IconWithFallback 
+                  src={option.icon} 
+                  alt="" 
+                  width={18} 
+                  height={18}
+                />
+              )}
+              <span>{option.label}</span>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

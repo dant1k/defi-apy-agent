@@ -28,7 +28,25 @@ app.include_router(strategies.router)
 app.include_router(cmc_cache.router)
 
 # Serve cached icons from API under /icons/... (tokens, chains)
-app.mount("/icons", StaticFiles(directory="api/static/icons"), name="icons")
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
+import os
+
+@app.get("/icons/{category}/{filename}")
+async def serve_icon(category: str, filename: str):
+    """Serve icons from backup with proper CORS headers"""
+    full_path = f"api/static/icons/{category}/{filename}"
+    if os.path.exists(full_path):
+        return FileResponse(
+            full_path,
+            media_type="image/png",
+            headers={
+                "Access-Control-Allow-Origin": "*",
+                "Access-Control-Allow-Methods": "GET",
+                "Access-Control-Allow-Headers": "*",
+            }
+        )
+    return {"error": "Icon not found"}
 
 
 @app.get("/health")

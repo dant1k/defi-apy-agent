@@ -1,0 +1,50 @@
+[
+  {
+    "name": "Base",
+    "id": "base",
+    "icon": "/icons/chains/Base.png",
+    "logo_url": "https://coin-images.coingecko.com/coins/images/40143/large/cbbtc.webp"
+  },
+  {
+    "name": "Stellar",
+    "id": "stellar",
+    "icon": "/icons/chains/Stellar.png",
+    "logo_url": "https://coin-images.coingecko.com/coins/images/100/large/fmpFRHHQ_400x400.jpg"
+  },
+  {
+    "name": "Solana",
+    "id": "solana",
+    "icon": "/icons/chains/Solana.png",
+    "logo_url": "https://coin-images.coingecko.com/coins/images/4128/large/solana.png"
+  },
+  {
+    "name": "Cardano",
+    "id": "cardano",
+    "icon": "/icons/chains/Cardano.png",
+    "logo_url": "https://coin-images.coingecko.com/coins/images/975/large/cardano.png"
+  },
+  {
+    "name": "Aptos",
+    "id": "aptos",
+    "icon": "/icons/chains/Aptos.png",
+    "logo_url": "https://coin-images.coingecko.com/coins/images/26455/large/aptos_round.png"
+  },
+  {
+    "name": "Polkadot",
+    "id": "polkadot",
+    "icon": "/icons/chains/Polkadot.png",
+    "logo_url": "https://coin-images.coingecko.com/coins/images/12171/large/polkadot.png"
+  },
+  {
+    "name": "Cosmos",
+    "id": "cosmos",
+    "icon": "/icons/chains/Cosmos.png",
+    "logo_url": "https://coin-images.coingecko.com/coins/images/1481/large/cosmos_hub.png"
+  },
+  {
+    "name": "Ethereum",
+    "id": "ethereum",
+    "icon": "/icons/chains/Ethereum.png",
+    "logo_url": "https://coin-images.coingecko.com/coins/images/279/large/ethereum.png"
+  }
+]
