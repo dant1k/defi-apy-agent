@@ -102,6 +102,21 @@ export default function StrategiesPanel({ apiBaseUrl, chains, protocols, tokens 
     [],
   );
 
+  function getChainIconUrl(name: string): string {
+    return `${apiBaseUrl}/icons/chains/${encodeURIComponent(name)}.png`;
+  }
+
+  function getTokenIconUrl(symbol: string): string {
+    return `${apiBaseUrl}/icons/tokens/${encodeURIComponent(symbol)}.png`;
+  }
+
+  function getProtocolIconUrl(name: string): string {
+    // многие иконки протоколов лежат напрямую в /icons/NAME.png (например, AAVE, CRV, UNI)
+    // пробуем нормализовать к верхнему регистру и дефисы убрать
+    const file = name?.toUpperCase().replace(/[^A-Z0-9]/g, "");
+    return `${apiBaseUrl}/icons/${encodeURIComponent(file)}.png`;
+  }
+
   const rows = fetchState.items;
 
   return (
@@ -273,8 +288,20 @@ function StrategyTable({
                   </div>
                 </div>
               </td>
-              <td>{formatLabel(strategy.protocol)}</td>
-              <td>{formatLabel(strategy.chain)}</td>
+              <td>
+                <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+                  {strategy.icon_url && (
+                    <img src={strategy.icon_url} alt="" width={16} height={16} loading="lazy" onError={(e) => ((e.currentTarget.style.display = "none"))} />
+                  )}
+                  {formatLabel(strategy.protocol)}
+                </span>
+              </td>
+              <td>
+                <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+                  <img src={getChainIconUrl(strategy.chain)} alt="" width={16} height={16} loading="lazy" onError={(e) => ((e.currentTarget.style.display = "none"))} />
+                  {formatLabel(strategy.chain)}
+                </span>
+              </td>
               <td>{formatPercent(strategy.apy)}</td>
               <td>{formatNumber(strategy.tvl_usd, 0)} $</td>
               <td className={strategy.tvl_growth_24h >= 0 ? "positive" : "negative"}>
