@@ -119,6 +119,16 @@ export default function StrategiesPanel({ apiBaseUrl, chains, protocols, tokens 
 
   const rows = fetchState.items;
 
+  const selectedChainIcon = useMemo(() =>
+    filters.chain && filters.chain !== "all" ? getChainIconUrl(filters.chain) : null,
+  [filters.chain]);
+  const selectedProtocolIcon = useMemo(() =>
+    filters.protocol && filters.protocol !== "all" ? getProtocolIconUrl(filters.protocol) : null,
+  [filters.protocol]);
+  const selectedTokenIcon = useMemo(() =>
+    filters.token && filters.token !== "all" ? getTokenIconUrl(filters.token) : null,
+  [filters.token]);
+
   return (
     <div className="strategies-panel">
       <header className="strategies-header">
@@ -132,38 +142,53 @@ export default function StrategiesPanel({ apiBaseUrl, chains, protocols, tokens 
       <section className="strategies-filters">
         <div className="filter-group">
           <label htmlFor="chain-select">Сеть</label>
-          <select id="chain-select" name="chain" value={filters.chain} onChange={handleSelectChange}>
+          <div style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+            {selectedChainIcon && (
+              <img src={selectedChainIcon} alt="" width={18} height={18} loading="lazy" onError={(e) => ((e.currentTarget.style.display = "none"))} />
+            )}
+            <select id="chain-select" name="chain" value={filters.chain} onChange={handleSelectChange}>
             <option value="all">Все сети</option>
             {chains.map((item) => (
               <option key={item} value={item}>
                 {formatLabel(item)}
               </option>
             ))}
-          </select>
+            </select>
+          </div>
         </div>
 
         <div className="filter-group">
           <label htmlFor="protocol-select">Протокол</label>
-          <select id="protocol-select" name="protocol" value={filters.protocol} onChange={handleSelectChange}>
+          <div style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+            {selectedProtocolIcon && (
+              <img src={selectedProtocolIcon} alt="" width={18} height={18} loading="lazy" onError={(e) => ((e.currentTarget.style.display = "none"))} />
+            )}
+            <select id="protocol-select" name="protocol" value={filters.protocol} onChange={handleSelectChange}>
             <option value="all">Все протоколы</option>
             {protocols.map((item) => (
               <option key={item} value={item}>
                 {formatLabel(item)}
               </option>
             ))}
-          </select>
+            </select>
+          </div>
         </div>
 
         <div className="filter-group">
           <label htmlFor="token-select">Токен</label>
-          <select id="token-select" name="token" value={filters.token} onChange={handleSelectChange}>
+          <div style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+            {selectedTokenIcon && (
+              <img src={selectedTokenIcon} alt="" width={18} height={18} loading="lazy" onError={(e) => ((e.currentTarget.style.display = "none"))} />
+            )}
+            <select id="token-select" name="token" value={filters.token} onChange={handleSelectChange}>
             <option value="all">Все токены</option>
             {tokens.map((symbol) => (
               <option key={symbol} value={symbol}>
                 {symbol}
               </option>
             ))}
-          </select>
+            </select>
+          </div>
         </div>
 
         {/* Поле поиска по токену удалено по просьбе пользователя */}
