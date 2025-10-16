@@ -14,6 +14,7 @@ type StrategiesPanelProps = {
   apiBaseUrl: string;
   chains: string[];
   protocols: string[];
+  tokens?: string[];
 };
 
 type FetchState = {
@@ -25,6 +26,7 @@ type FetchState = {
 const DEFAULT_FILTERS: FiltersState = {
   chain: "all",
   protocol: "all",
+  token: "all",
   minTvl: 1_000_000,
   minApy: 0,
   sort: "ai_score_desc",
@@ -32,12 +34,13 @@ const DEFAULT_FILTERS: FiltersState = {
 
 const PAGE_LIMIT = 150;
 
-export default function StrategiesPanel({ apiBaseUrl, chains, protocols }: StrategiesPanelProps): JSX.Element {
+export default function StrategiesPanel({ apiBaseUrl, chains, protocols, tokens = [] }: StrategiesPanelProps): JSX.Element {
   const [filters, setFilters] = useState<FiltersState>(DEFAULT_FILTERS);
   const [fetchState, setFetchState] = useState<FetchState>({ items: [], total: 0, updatedAt: null });
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedStrategy, setSelectedStrategy] = useState<AggregatedStrategy | null>(null);
+  // удалён текстовый поиск по токену
 
   useEffect(() => {
     const controller = new AbortController();
@@ -57,7 +60,11 @@ export default function StrategiesPanel({ apiBaseUrl, chains, protocols }: Strat
           },
           controller.signal,
         );
-        setFetchState({ items: response.items, total: response.total, updatedAt: response.updated_at });
+        const fetched = response.items;
+        const filteredByToken = filters.token && filters.token !== "all"
+          ? fetched.filter((it) => (it.token_pair || "").toUpperCase().includes((filters.token || "").toUpperCase()))
+          : fetched;
+        setFetchState({ items: filteredByToken, total: filteredByToken.length, updatedAt: response.updated_at });
       } catch (err) {
         if (!controller.signal.aborted) {
           const message = err instanceof Error ? err.message : "Не удалось загрузить данные";
@@ -102,8 +109,7 @@ export default function StrategiesPanel({ apiBaseUrl, chains, protocols }: Strat
       <header className="strategies-header">
         <h2>Top DeFi Strategies</h2>
         <p>
-          Подборка стратегий с учётом APY, роста TVL и риск-скоринга. Актуальность:
-          {" "}
+          Подборка стратегий с учётом APY, роста TVL и риск-скоринга. Актуальность:{" "}
           {fetchState.updatedAt ? new Date(fetchState.updatedAt).toLocaleString("ru-RU") : "—"}.
         </p>
       </header>
@@ -132,6 +138,20 @@ export default function StrategiesPanel({ apiBaseUrl, chains, protocols }: Strat
             ))}
           </select>
         </div>
+
+        <div className="filter-group">
+          <label htmlFor="token-select">Токен</label>
+          <select id="token-select" name="token" value={filters.token} onChange={handleSelectChange}>
+            <option value="all">Все токены</option>
+            {tokens.map((symbol) => (
+              <option key={symbol} value={symbol}>
+                {symbol}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* Поле поиска по токену удалено по просьбе пользователя */}
 
         <div className="filter-group">
           <label htmlFor="minTvl">Мин. TVL ($)</label>
@@ -183,7 +203,7 @@ export default function StrategiesPanel({ apiBaseUrl, chains, protocols }: Strat
       ) : (
         <StrategyTable
           strategies={rows}
-          total={fetchState.total}
+          total={rows.length}
           onSelect={(item) => setSelectedStrategy(item)}
         />
       )}
