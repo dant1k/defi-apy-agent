@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Icon Debug Test</title>
+</head>
+<body>
+    <h1>Icon Debug Test</h1>
+    
+    <h2>Test 1: Direct API call</h2>
+    <img src="http://localhost:8000/icons/protocols/AAVEV3.png" alt="AAVEV3" width="32" height="32" onerror="console.log('API icon failed')" onload="console.log('API icon loaded')">
+    
+    <h2>Test 2: Frontend path</h2>
+    <img src="/icons/protocols/AAVEV3.png" alt="AAVEV3" width="32" height="32" onerror="console.log('Frontend icon failed')" onload="console.log('Frontend icon loaded')">
+    
+    <h2>Test 3: Available icons</h2>
+    <img src="http://localhost:8000/icons/protocols/UNISWAPV1.png" alt="UNISWAPV1" width="32" height="32" onerror="console.log('UNISWAPV1 failed')" onload="console.log('UNISWAPV1 loaded')">
+    
+    <script>
+        console.log('Page loaded');
+    </script>
+</body>
+</html>
+

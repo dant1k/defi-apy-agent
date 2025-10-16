@@ -104,8 +104,7 @@ export default function StrategiesPanel({ apiBaseUrl, chains, protocols, tokens 
 
   function getChainIconUrl(name: string): string {
     // Нормализуем имя для файла
-    const file = name.replace(" ", "").replace("-", "").replace("_", "").replace(".", "");
-    // Сначала пробуем локальную иконку, потом через бекенд
+    const file = name?.toUpperCase().replace(/[^A-Z0-9]/g, "");
     return `/icons/chains/${encodeURIComponent(file)}.png`;
   }
 

@@ -11,7 +11,10 @@ import requests
 from src.utils.tokens import classify_pair, contains_wrapper, normalize_pair, parse_tokens
 
 POOLS_URL = "https://yields.llama.fi/pools"
-INDEX_TTL = timedelta(minutes=15)
+INDEX_TTL = timedelta(minutes=5)  # Более частое обновление индекса пулов
+
+# Минимальный TVL для рассмотрения стратегий (в USD)
+MIN_TVL_USD = 1_000_000
 
 
 class PoolIndex:
@@ -32,6 +35,11 @@ class PoolIndex:
 
             new_index: Dict[str, List[Dict[str, object]]] = {}
             for pool in pools:
+                # Фильтруем по минимальному TVL
+                tvl_usd = float(pool.get("tvlUsd") or pool.get("tvl_usd") or 0.0)
+                if tvl_usd < MIN_TVL_USD:
+                    continue
+                
                 symbol = pool.get("symbol") or ""
                 tokens = parse_tokens(symbol)
                 category = classify_pair(tokens)
