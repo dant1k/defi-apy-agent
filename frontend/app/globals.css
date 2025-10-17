@@ -1391,3 +1391,59 @@ button {
 .strategy-cta:hover {
   box-shadow: 0 12px 28px rgba(111, 165, 255, 0.35);
 }
+
+
+/* Navigation */
+.main-navigation {
+  background: rgba(11, 15, 25, 0.95);
+  border-bottom: 1px solid rgba(111, 165, 255, 0.12);
+  backdrop-filter: blur(10px);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.nav-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 60px;
+}
+
+.nav-logo {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #f2f7ff;
+  text-decoration: none;
+  background: linear-gradient(135deg, #6fa5ff, #86f7ff);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.nav-links {
+  display: flex;
+  gap: 20px;
+}
+
+.nav-link {
+  color: #b8c7ff;
+  text-decoration: none;
+  padding: 8px 16px;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  font-weight: 500;
+}
+
+.nav-link:hover {
+  color: #f2f7ff;
+  background: rgba(111, 165, 255, 0.1);
+}
+
+.nav-link.active {
+  color: #6fa5ff;
+  background: rgba(111, 165, 255, 0.15);
+}
