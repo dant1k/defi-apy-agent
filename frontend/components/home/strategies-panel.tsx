@@ -249,7 +249,12 @@ export default function StrategiesPanel({ apiBaseUrl, chains, protocols, tokens 
                   ? 'bg-[var(--neonAqua)] text-black' 
                   : 'bg-[var(--graphiteGray)] text-white/70 hover:text-white hover:border-[var(--neonAqua)] border border-transparent'
               }`}
-              onClick={() => setFilters((prev) => ({ ...prev, sort: option.value }))}
+              onClick={() => {
+                setFilters((prev) => ({ ...prev, sort: option.value }));
+                if (hasSearched) {
+                  handleSearch();
+                }
+              }}
             >
               {option.label}
             </button>
