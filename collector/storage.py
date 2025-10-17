@@ -61,6 +61,10 @@ class StrategyStorage:
 
         protocols = {item["protocol"] for item in strategies if item.get("protocol")}
         chains = {item["chain"] for item in strategies if item.get("chain")}
+        
+        # Исключаем ненужные сети
+        excluded_chains = {"APTOS", "Bifrost", "Bifrost Network", "ICP", "Opbnb", "Rollux", "Zksync"}
+        chains = chains - excluded_chains
 
         if protocols:
             self.redis.delete(PROTOCOL_SET_KEY)
