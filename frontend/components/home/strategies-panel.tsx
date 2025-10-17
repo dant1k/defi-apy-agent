@@ -218,6 +218,16 @@ export default function StrategiesPanel({ apiBaseUrl, chains, protocols, tokens 
             />
           </div>
 
+        </div>
+      </section>
+
+      <section className="card-genora mb-8">
+        <h3 className="font-orbitron text-xl font-bold text-[var(--neonAqua)] mb-6">
+          Sorting Options
+        </h3>
+        
+        {/* Minimum Value Filters */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
           <div className="filter-group">
             <label htmlFor="minTvl" className="font-orbitron text-sm font-semibold text-white mb-2 block">
               Мин. TVL ($)
@@ -252,12 +262,8 @@ export default function StrategiesPanel({ apiBaseUrl, chains, protocols, tokens 
             />
           </div>
         </div>
-      </section>
 
-      <section className="card-genora mb-8">
-        <h3 className="font-orbitron text-xl font-bold text-[var(--neonAqua)] mb-6">
-          Sorting Options
-        </h3>
+        {/* Sort Buttons */}
         <div className="flex flex-wrap gap-3">
           {sortOptions.map((option) => (
             <button
