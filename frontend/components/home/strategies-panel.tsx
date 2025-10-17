@@ -301,7 +301,7 @@ export default function StrategiesPanel({ apiBaseUrl, chains, protocols, tokens 
               <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
                 {/* Main Strategy Card */}
                 <div className="lg:col-span-2">
-                  <div className="card-genora shadow-glow cursor-pointer hover:scale-105 transition-transform"
+                  <div className="card-genora shadow-glow cursor-pointer hover:scale-105 transition-transform h-full flex flex-col"
                        onClick={() => setSelectedStrategy(rows[0])}>
                     <div className="flex items-center space-x-4 mb-4">
                       {(() => {
@@ -323,7 +323,7 @@ export default function StrategiesPanel({ apiBaseUrl, chains, protocols, tokens 
                         </p>
                       </div>
                     </div>
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-2 gap-4 flex-grow">
                       <div>
                         <p className="font-spacemono text-xs text-white/60">APY</p>
                         <p className="font-spacemono text-xl font-bold text-[var(--profitGreen)]">
@@ -357,7 +357,7 @@ export default function StrategiesPanel({ apiBaseUrl, chains, protocols, tokens 
                   <h4 className="font-orbitron text-lg font-bold text-[var(--neonAqua)] mb-4">
                     Alternative Strategies
                   </h4>
-                  <div className="space-y-3">
+                  <div className="space-y-3 h-full">
                     {rows.slice(1, 4).map((strategy, index) => (
                       <div key={strategy.id} 
                            className="card-genora cursor-pointer hover:scale-102 transition-transform"
