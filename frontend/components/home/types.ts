@@ -29,8 +29,8 @@ export type FiltersState = {
   chain: string;
   protocol: string;
   token?: string;
-  minTvl: number;
-  minApy: number;
+  minTvl: string | number;
+  minApy: string | number;
   sort: "ai_score_desc" | "apy_desc" | "tvl_desc" | "tvl_growth_desc";
 };
 
