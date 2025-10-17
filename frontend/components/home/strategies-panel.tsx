@@ -236,45 +236,10 @@ export default function StrategiesPanel({ apiBaseUrl, chains, protocols, tokens 
           Sorting Options
         </h3>
         
-        {/* Minimum Value Filters */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-          <div className="filter-group">
-            <label htmlFor="minTvl" className="font-orbitron text-sm font-semibold text-white mb-2 block">
-              Мин. TVL ($)
-            </label>
-            <input
-              id="minTvl"
-              name="minTvl"
-              type="number"
-              min={0}
-              step={100000}
-              value={filters.minTvl}
-              onChange={handleNumberChange}
-              className="w-full px-3 py-2 bg-[var(--graphiteGray)] border border-white/20 rounded text-white placeholder-white/50 focus:border-[var(--neonAqua)] focus:outline-none"
-              placeholder="0"
-            />
-          </div>
-
-          <div className="filter-group">
-            <label htmlFor="minApy" className="font-orbitron text-sm font-semibold text-white mb-2 block">
-              Мин. APY (%)
-            </label>
-            <input
-              id="minApy"
-              name="minApy"
-              type="number"
-              min={0}
-              step={0.1}
-              value={filters.minApy}
-              onChange={handleNumberChange}
-              className="w-full px-3 py-2 bg-[var(--graphiteGray)] border border-white/20 rounded text-white placeholder-white/50 focus:border-[var(--neonAqua)] focus:outline-none"
-              placeholder="0"
-            />
-          </div>
-        </div>
-
-        {/* Sort Buttons */}
-        <div className="flex flex-wrap gap-3">
+        {/* Sort Buttons and Minimum Filters */}
+        <div className="space-y-6">
+          {/* Sort Buttons */}
+          <div className="flex flex-wrap gap-3">
           {sortOptions.map((option) => (
             <button
               key={option.value}
@@ -289,6 +254,44 @@ export default function StrategiesPanel({ apiBaseUrl, chains, protocols, tokens 
               {option.label}
             </button>
           ))}
+          </div>
+
+          {/* Minimum Value Filters */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="filter-group">
+              <label htmlFor="minTvl" className="font-orbitron text-sm font-semibold text-white mb-2 block">
+                Мин. TVL ($)
+              </label>
+              <input
+                id="minTvl"
+                name="minTvl"
+                type="number"
+                min={0}
+                step={100000}
+                value={filters.minTvl}
+                onChange={handleNumberChange}
+                className="w-full px-3 py-2 bg-[var(--graphiteGray)] border border-white/20 rounded text-white placeholder-white/50 focus:border-[var(--neonAqua)] focus:outline-none"
+                placeholder="0"
+              />
+            </div>
+
+            <div className="filter-group">
+              <label htmlFor="minApy" className="font-orbitron text-sm font-semibold text-white mb-2 block">
+                Мин. APY (%)
+              </label>
+              <input
+                id="minApy"
+                name="minApy"
+                type="number"
+                min={0}
+                step={0.1}
+                value={filters.minApy}
+                onChange={handleNumberChange}
+                className="w-full px-3 py-2 bg-[var(--graphiteGray)] border border-white/20 rounded text-white placeholder-white/50 focus:border-[var(--neonAqua)] focus:outline-none"
+                placeholder="0"
+              />
+            </div>
+          </div>
         </div>
       </section>
       )}
