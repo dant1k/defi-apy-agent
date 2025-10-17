@@ -46,7 +46,7 @@ export function StrategiesClient(): JSX.Element {
   }, []);
 
   return (
-    <div className="min-h-screen bg-[var(--darkVoid)] pt-20">
+    <div className="min-h-screen bg-[var(--darkVoid)]">
       <div className="container mx-auto px-6 py-8">
         <div className="text-center mb-12">
           <h1 className="font-orbitron text-4xl font-bold text-[var(--neonAqua)] mb-4">

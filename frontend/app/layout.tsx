@@ -24,7 +24,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
     <html lang="ru">
       <body className={inter.className}>
         <Navigation />
-        <div className="app-shell">
+        <div className="main-content-with-sidebar">
           <main>{children}</main>
           <footer>
             <span>Данные поставляет DeFiLlama • Осторожно оценивайте риски</span>

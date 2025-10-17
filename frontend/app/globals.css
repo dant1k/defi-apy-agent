@@ -103,26 +103,165 @@ h1, h2, h3, .font-orbitron {
   font-size: 1.4rem;
 }
 
-/* Navigation */
-.nav-genora {
-  backdrop-filter: blur(6px);
-  background: rgba(0,0,0,0.3);
-  border-bottom: 1px solid rgba(255,255,255,0.08);
-  padding: 0.8rem 2rem;
+/* Sidebar Navigation */
+.sidebar-genora {
   position: fixed;
-  width: 100%;
-  top: 0;
   left: 0;
+  top: 0;
+  width: 280px;
+  height: 100vh;
+  background: var(--darkVoid);
+  border-right: 1px solid rgba(0,246,255,0.1);
+  padding: 2rem 1.5rem;
   z-index: 50;
+  overflow-y: auto;
 }
-.nav-genora a {
-  color: rgba(255,255,255,0.75);
-  margin-left: 1.2rem;
+
+.sidebar-header {
+  margin-bottom: 2rem;
+  padding: 0.5rem 0;
+}
+
+.sidebar-header .flex {
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.logo-icon-artemis {
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(135deg, var(--cyberViolet), var(--neonAqua));
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 0 20px rgba(0,246,255,0.3);
+  transition: all 0.3s ease;
+}
+
+.logo-icon-artemis:hover {
+  box-shadow: 0 0 30px rgba(0,246,255,0.5);
+  transform: scale(1.05);
+}
+
+.logo-image-artemis {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+  filter: brightness(0) invert(1);
+}
+
+.app-name-artemis {
+  font-family: 'Orbitron', sans-serif;
+  font-weight: bold;
+  font-size: 1.5rem;
+  color: var(--pureWhite);
+  letter-spacing: 0.5px;
+  line-height: 1;
+}
+
+.search-container {
+  margin-bottom: 2rem;
+}
+
+.search-input {
+  position: relative;
+  display: flex;
+  align-items: center;
+  background: var(--graphiteGray);
+  border: 1px solid rgba(0,246,255,0.2);
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  transition: all 0.2s ease;
+}
+
+.search-input:focus-within {
+  border-color: var(--neonAqua);
+  box-shadow: 0 0 15px rgba(0,246,255,0.2);
+}
+
+.search-icon {
+  color: rgba(255,255,255,0.5);
+  margin-right: 0.75rem;
+  flex-shrink: 0;
+}
+
+.search-field {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--pureWhite);
+  font-family: 'Inter', sans-serif;
+  font-size: 0.9rem;
+}
+
+.search-field::placeholder {
+  color: rgba(255,255,255,0.4);
+}
+
+.search-shortcut {
+  background: rgba(255,255,255,0.1);
+  color: rgba(255,255,255,0.6);
+  font-size: 0.75rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-family: 'Space Mono', monospace;
+}
+
+.nav-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
   text-decoration: none;
-  transition: 0.2s;
+  color: var(--pureWhite);
+  font-family: 'Inter', sans-serif;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  position: relative;
 }
-.nav-genora a:hover {
+
+.nav-item:hover {
+  background: rgba(0,246,255,0.1);
   color: var(--neonAqua);
+}
+
+.nav-item-active {
+  background: rgba(0,246,255,0.15);
+  color: var(--neonAqua);
+  border: 1px solid rgba(0,246,255,0.3);
+}
+
+.nav-item-active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 60%;
+  background: var(--neonAqua);
+  border-radius: 0 2px 2px 0;
+}
+
+.nav-icon {
+  flex-shrink: 0;
+  color: currentColor;
+}
+
+/* Main content adjustment for sidebar */
+.main-content-with-sidebar {
+  margin-left: 280px;
+  min-height: 100vh;
 }
 
 /* Utility shadows */
