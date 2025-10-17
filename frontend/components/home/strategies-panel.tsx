@@ -525,7 +525,7 @@ function StrategyTable({
   });
 
   const getSortIcon = (field: string) => {
-    if (sortField !== field) return '↕️';
+    if (sortField !== field) return '⇅';
     return sortDirection === 'desc' ? '↓' : '↑';
   };
   return (
@@ -547,7 +547,7 @@ function StrategyTable({
               <th className="text-left py-3 px-4 font-orbitron text-sm font-semibold text-[var(--neonAqua)]">Protocol</th>
               <th className="text-left py-3 px-4 font-orbitron text-sm font-semibold text-[var(--neonAqua)]">Chain</th>
               <th 
-                className="text-left py-3 px-4 font-orbitron text-sm font-semibold text-[var(--neonAqua)] cursor-pointer hover:text-white transition-colors select-none"
+                className="text-left py-3 px-4 font-orbitron text-sm font-semibold text-[var(--neonAqua)] cursor-pointer select-none"
                 onClick={() => handleSort('apy')}
               >
                 <div className="flex items-center space-x-1">
@@ -556,7 +556,7 @@ function StrategyTable({
                 </div>
               </th>
               <th 
-                className="text-left py-3 px-4 font-orbitron text-sm font-semibold text-[var(--neonAqua)] cursor-pointer hover:text-white transition-colors select-none"
+                className="text-left py-3 px-4 font-orbitron text-sm font-semibold text-[var(--neonAqua)] cursor-pointer select-none"
                 onClick={() => handleSort('tvl')}
               >
                 <div className="flex items-center space-x-1">
@@ -565,7 +565,7 @@ function StrategyTable({
                 </div>
               </th>
               <th 
-                className="text-left py-3 px-4 font-orbitron text-sm font-semibold text-[var(--neonAqua)] cursor-pointer hover:text-white transition-colors select-none"
+                className="text-left py-3 px-4 font-orbitron text-sm font-semibold text-[var(--neonAqua)] cursor-pointer select-none"
                 onClick={() => handleSort('tvl_growth')}
               >
                 <div className="flex items-center space-x-1">
@@ -574,7 +574,7 @@ function StrategyTable({
                 </div>
               </th>
               <th 
-                className="text-left py-3 px-4 font-orbitron text-sm font-semibold text-[var(--neonAqua)] cursor-pointer hover:text-white transition-colors select-none"
+                className="text-left py-3 px-4 font-orbitron text-sm font-semibold text-[var(--neonAqua)] cursor-pointer select-none"
                 onClick={() => handleSort('risk')}
               >
                 <div className="flex items-center space-x-1">
@@ -583,7 +583,7 @@ function StrategyTable({
                 </div>
               </th>
               <th 
-                className="text-left py-3 px-4 font-orbitron text-sm font-semibold text-[var(--neonAqua)] cursor-pointer hover:text-white transition-colors select-none"
+                className="text-left py-3 px-4 font-orbitron text-sm font-semibold text-[var(--neonAqua)] cursor-pointer select-none"
                 onClick={() => handleSort('ai_score')}
               >
                 <div className="flex items-center space-x-1">
