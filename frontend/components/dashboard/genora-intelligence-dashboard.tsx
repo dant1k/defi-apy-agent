@@ -1,7 +1,39 @@
 'use client';
 
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+// Simple Card components
+const Card = ({ children, className = "" }: { children: React.ReactNode; className?: string }) => (
+  <div className={`bg-gradient-to-b from-black/70 to-black/40 border border-cyan-900/50 shadow-[0_0_30px_-10px_rgba(34,211,238,0.5)] rounded-lg ${className}`}>
+    {children}
+  </div>
+);
+
+const CardHeader = ({ children, className = "" }: { children: React.ReactNode; className?: string }) => (
+  <div className={`p-6 pb-0 ${className}`}>
+    {children}
+  </div>
+);
+
+const CardTitle = ({ children, className = "" }: { children: React.ReactNode; className?: string }) => (
+  <h3 className={`text-lg font-semibold ${className}`}>
+    {children}
+  </h3>
+);
+
+const CardContent = ({ children, className = "" }: { children: React.ReactNode; className?: string }) => (
+  <div className={`p-6 pt-0 ${className}`}>
+    {children}
+  </div>
+);
+
+const Button = ({ children, className = "", onClick, ...props }: { children: React.ReactNode; className?: string; onClick?: () => void; [key: string]: any }) => (
+  <button 
+    className={`px-4 py-2 rounded font-medium transition-colors ${className}`}
+    onClick={onClick}
+    {...props}
+  >
+    {children}
+  </button>
+);
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, AreaChart, Area, BarChart, Bar } from "recharts";
 import { motion, useMotionValue, useTransform } from "framer-motion";
 import { useEffect, useState, useRef } from "react";

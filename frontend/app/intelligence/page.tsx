@@ -1,5 +1,5 @@
-import GenoraIntelligenceDashboard from '@/components/dashboard/genora-intelligence-dashboard';
+import MockIntelligenceDashboard from '../../components/dashboard/mock-intelligence-dashboard';
 
 export default function IntelligencePage() {
-  return <GenoraIntelligenceDashboard />;
+  return <MockIntelligenceDashboard />;
 }
