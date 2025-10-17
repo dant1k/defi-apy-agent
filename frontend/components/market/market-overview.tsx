@@ -24,6 +24,7 @@ export function MarketOverview({ strategies }: MarketOverviewProps) {
     topChain: '',
     lastUpdate: new Date()
   });
+  const [isLoading, setIsLoading] = useState(true);
 
   const [trends, setTrends] = useState<MarketTrend[]>([]);
 
@@ -38,19 +39,21 @@ export function MarketOverview({ strategies }: MarketOverviewProps) {
       ? safeStrategies.reduce((sum, s) => sum + (s.apy || 0), 0) / safeStrategies.length 
       : 0;
 
-    // Find top protocol and chain
-    const protocolCounts = safeStrategies.reduce((acc, s) => {
-      acc[s.protocol] = (acc[s.protocol] || 0) + 1;
+    // Find top protocol and chain by TVL
+    const protocolTvl = safeStrategies.reduce((acc, s) => {
+      const protocol = s.protocol || 'Unknown';
+      acc[protocol] = (acc[protocol] || 0) + (s.tvl_usd || 0);
       return acc;
     }, {} as Record<string, number>);
 
-    const chainCounts = safeStrategies.reduce((acc, s) => {
-      acc[s.chain] = (acc[s.chain] || 0) + 1;
+    const chainTvl = safeStrategies.reduce((acc, s) => {
+      const chain = s.chain || 'Unknown';
+      acc[chain] = (acc[chain] || 0) + (s.tvl_usd || 0);
       return acc;
     }, {} as Record<string, number>);
 
-    const topProtocol = Object.entries(protocolCounts).sort(([,a], [,b]) => b - a)[0]?.[0] || 'N/A';
-    const topChain = Object.entries(chainCounts).sort(([,a], [,b]) => b - a)[0]?.[0] || 'N/A';
+    const topProtocol = Object.entries(protocolTvl).sort(([,a], [,b]) => b - a)[0]?.[0] || 'N/A';
+    const topChain = Object.entries(chainTvl).sort(([,a], [,b]) => b - a)[0]?.[0] || 'N/A';
 
     setMarketData({
       totalTvl,
@@ -106,6 +109,7 @@ export function MarketOverview({ strategies }: MarketOverviewProps) {
     ];
 
     setTrends(mockTrends);
+    setIsLoading(false);
   }, [strategies]);
 
   const formatTvl = (tvl: number) => {
@@ -151,33 +155,53 @@ export function MarketOverview({ strategies }: MarketOverviewProps) {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
         <div className="stat-genora shadow-glow">
           <h3>Total Market TVL</h3>
-          <p className="font-spacemono text-2xl font-bold">{formatTvl(marketData.totalTvl)}</p>
+          {isLoading ? (
+            <div className="animate-pulse bg-white/20 h-8 w-24 rounded"></div>
+          ) : (
+            <p className="font-spacemono text-2xl font-bold">{formatTvl(marketData.totalTvl)}</p>
+          )}
           <div className="text-[var(--profitGreen)] text-sm font-medium">+5.2%</div>
         </div>
 
         <div className="stat-genora">
           <h3>Active Strategies</h3>
-          <p className="font-spacemono text-2xl font-bold">{marketData.totalStrategies}</p>
+          {isLoading ? (
+            <div className="animate-pulse bg-white/20 h-8 w-16 rounded"></div>
+          ) : (
+            <p className="font-spacemono text-2xl font-bold">{marketData.totalStrategies}</p>
+          )}
           <div className="text-[var(--profitGreen)] text-sm font-medium">+12 new</div>
         </div>
 
         <div className="stat-genora">
           <h3>Average APY</h3>
-          <p className="font-spacemono text-2xl font-bold">{marketData.avgApy.toFixed(2)}%</p>
+          {isLoading ? (
+            <div className="animate-pulse bg-white/20 h-8 w-20 rounded"></div>
+          ) : (
+            <p className="font-spacemono text-2xl font-bold">{marketData.avgApy.toFixed(2)}%</p>
+          )}
           <div className="text-[var(--profitGreen)] text-sm font-medium">+0.8%</div>
         </div>
 
         <div className="stat-genora">
           <h3>Top Protocol</h3>
-          <p className="font-spacemono text-lg font-bold break-words">
-            {marketData.topProtocol}
-          </p>
+          {isLoading ? (
+            <div className="animate-pulse bg-white/20 h-6 w-32 rounded"></div>
+          ) : (
+            <p className="font-spacemono text-lg font-bold break-words">
+              {marketData.topProtocol}
+            </p>
+          )}
           <div className="text-white/60 text-sm">Leading</div>
         </div>
 
         <div className="stat-genora">
           <h3>Top Chain</h3>
-          <p className="font-spacemono text-2xl font-bold">{marketData.topChain}</p>
+          {isLoading ? (
+            <div className="animate-pulse bg-white/20 h-8 w-24 rounded"></div>
+          ) : (
+            <p className="font-spacemono text-2xl font-bold">{marketData.topChain}</p>
+          )}
           <div className="text-white/60 text-sm">Dominant</div>
         </div>
       </div>

@@ -26,26 +26,39 @@ export default function DashboardClient() {
     const loadStrategies = async () => {
       try {
         setLoading(true);
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+        console.log('Loading strategies from:', apiUrl);
+        
         const response = await fetchAggregatorStrategies(
-          process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000',
+          apiUrl,
           {
             chain: null,
             protocol: null,
             min_tvl: null,
             min_apy: null,
             sort: 'ai_score_desc',
-            limit: 50,
+            limit: 200,
           }
         );
+        console.log('Loaded strategies:', response.items.length);
         setStrategies(response.items);
       } catch (error) {
         console.error('Failed to load strategies:', error);
+        // Set empty array on error to prevent infinite loading
+        setStrategies([]);
       } finally {
         setLoading(false);
       }
     };
 
+    // Load strategies immediately
     loadStrategies();
+
+    // Set up auto-refresh every 2 minutes (120000ms)
+    const interval = setInterval(loadStrategies, 120000);
+
+    // Cleanup interval on unmount
+    return () => clearInterval(interval);
   }, []);
 
   const handleFiltersChange = (newFilters: any) => {
@@ -72,7 +85,15 @@ export default function DashboardClient() {
           }}
         />
 
-        <MarketOverview />
+        {loading ? (
+          <div className="card-genora mb-8">
+            <div className="text-center py-8">
+              <div className="font-inter text-white/60">Loading market data...</div>
+            </div>
+          </div>
+        ) : (
+          <MarketOverview strategies={strategies} />
+        )}
 
         <AdvancedFilters onFiltersChange={handleFiltersChange} />
 
