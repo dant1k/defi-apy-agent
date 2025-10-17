@@ -40,6 +40,7 @@ export default function StrategiesPanel({ apiBaseUrl, chains, protocols, tokens 
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedStrategy, setSelectedStrategy] = useState<AggregatedStrategy | null>(null);
+  const [showAllStrategies, setShowAllStrategies] = useState<boolean>(false);
   // удалён текстовый поиск по токену
 
   useEffect(() => {
@@ -61,9 +62,15 @@ export default function StrategiesPanel({ apiBaseUrl, chains, protocols, tokens 
           controller.signal,
         );
         const fetched = response.items;
+        
+        // Filter by TVL (minimum 100,000)
+        const filteredByTvl = fetched.filter((it) => (it.tvl_usd || 0) >= 100000);
+        
+        // Filter by token if specified
         const filteredByToken = filters.token && filters.token !== "all"
-          ? fetched.filter((it) => (it.token_pair || "").toUpperCase().includes((filters.token || "").toUpperCase()))
-          : fetched;
+          ? filteredByTvl.filter((it) => (it.token_pair || "").toUpperCase().includes((filters.token || "").toUpperCase()))
+          : filteredByTvl;
+          
         setFetchState({ items: filteredByToken, total: filteredByToken.length, updatedAt: response.updated_at });
       } catch (err) {
         if (!controller.signal.aborted) {
@@ -115,6 +122,20 @@ export default function StrategiesPanel({ apiBaseUrl, chains, protocols, tokens 
     // нормализуем имя протокола для поиска в DeFiLlama иконках
     const file = name?.toUpperCase().replace(/[^A-Z0-9]/g, "");
     return `/icons/protocols/${encodeURIComponent(file)}.png`;
+  }
+
+  function getTokenPairIcons(pair: string): { first: string; second: string } | null {
+    if (!pair) return null;
+    
+    // Разделяем пару по дефису или слешу
+    const tokens = pair.split(/[-/]/);
+    if (tokens.length >= 2) {
+      return {
+        first: getTokenIconUrl(tokens[0].trim()),
+        second: getTokenIconUrl(tokens[1].trim())
+      };
+    }
+    return null;
   }
 
   const rows = fetchState.items;
@@ -270,12 +291,138 @@ export default function StrategiesPanel({ apiBaseUrl, chains, protocols, tokens 
           </div>
         </div>
       ) : (
-        <StrategyTable
-          strategies={rows}
-          total={rows.length}
-          onSelect={(item) => setSelectedStrategy(item)}
-          getChainIconUrl={getChainIconUrl}
-        />
+        <>
+          {/* Featured Strategy Section */}
+          {rows.length > 0 && (
+            <div className="mb-8">
+              <h3 className="font-orbitron text-2xl font-bold text-[var(--neonAqua)] mb-6">
+                Featured Strategy
+              </h3>
+              <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                {/* Main Strategy Card */}
+                <div className="lg:col-span-2">
+                  <div className="card-genora shadow-glow cursor-pointer hover:scale-105 transition-transform"
+                       onClick={() => setSelectedStrategy(rows[0])}>
+                    <div className="flex items-center space-x-4 mb-4">
+                      {(() => {
+                        const pair = rows[0].token_pair || rows[0].name;
+                        const icons = getTokenPairIcons(pair);
+                        return icons ? (
+                          <>
+                            <img src={icons.first} alt="" width={24} height={24} className="rounded" />
+                            <img src={icons.second} alt="" width={24} height={24} className="rounded" />
+                          </>
+                        ) : null;
+                      })()}
+                      <div>
+                        <h4 className="font-orbitron text-lg font-bold text-white">
+                          {rows[0].token_pair || rows[0].name}
+                        </h4>
+                        <p className="font-inter text-sm text-white/60">
+                          {formatLabel(rows[0].protocol)} • {formatLabel(rows[0].chain)}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <p className="font-spacemono text-xs text-white/60">APY</p>
+                        <p className="font-spacemono text-xl font-bold text-[var(--profitGreen)]">
+                          {formatPercent(rows[0].apy)}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="font-spacemono text-xs text-white/60">TVL</p>
+                        <p className="font-spacemono text-lg font-semibold text-white">
+                          {formatNumber(rows[0].tvl_usd, 2)} $
+                        </p>
+                      </div>
+                      <div>
+                        <p className="font-spacemono text-xs text-white/60">Risk</p>
+                        <p className="font-spacemono text-sm text-white">
+                          {rows[0].risk_index?.toFixed(2) || "—"}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="font-spacemono text-xs text-white/60">AI Score</p>
+                        <p className="font-spacemono text-sm font-bold text-[var(--neonAqua)]">
+                          {rows[0].ai_score?.toFixed(2) || "—"}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Alternative Strategies */}
+                <div className="lg:col-span-2">
+                  <h4 className="font-orbitron text-lg font-bold text-[var(--neonAqua)] mb-4">
+                    Alternative Strategies
+                  </h4>
+                  <div className="space-y-3">
+                    {rows.slice(1, 4).map((strategy, index) => (
+                      <div key={strategy.id} 
+                           className="card-genora cursor-pointer hover:scale-102 transition-transform"
+                           onClick={() => setSelectedStrategy(strategy)}>
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-3">
+                            {(() => {
+                              const pair = strategy.token_pair || strategy.name;
+                              const icons = getTokenPairIcons(pair);
+                              return icons ? (
+                                <>
+                                  <img src={icons.first} alt="" width={16} height={16} className="rounded" />
+                                  <img src={icons.second} alt="" width={16} height={16} className="rounded" />
+                                </>
+                              ) : null;
+                            })()}
+                            <div>
+                              <p className="font-orbitron text-sm font-semibold text-white">
+                                {strategy.token_pair || strategy.name}
+                              </p>
+                              <p className="font-inter text-xs text-white/60">
+                                {formatLabel(strategy.protocol)} • {formatLabel(strategy.chain)}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <p className="font-spacemono text-sm font-bold text-[var(--profitGreen)]">
+                              {formatPercent(strategy.apy)}
+                            </p>
+                            <p className="font-spacemono text-xs text-white/60">
+                              {formatNumber(strategy.tvl_usd, 0)} $
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Show All Strategies Button */}
+          {rows.length > 4 && (
+            <div className="text-center mb-8">
+              <button
+                onClick={() => setShowAllStrategies(!showAllStrategies)}
+                className="button-genora"
+              >
+                {showAllStrategies ? 'Hide All Strategies' : `Show All Strategies (${rows.length - 4} more)`}
+              </button>
+            </div>
+          )}
+
+          {/* All Strategies Table */}
+          {showAllStrategies && (
+            <StrategyTable
+              strategies={rows}
+              total={rows.length}
+              onSelect={(item) => setSelectedStrategy(item)}
+              getChainIconUrl={getChainIconUrl}
+              getTokenPairIcons={getTokenPairIcons}
+            />
+          )}
+        </>
       )}
 
       {selectedStrategy && (
@@ -294,11 +441,13 @@ function StrategyTable({
   total,
   onSelect,
   getChainIconUrl,
+  getTokenPairIcons,
 }: {
   strategies: AggregatedStrategy[];
   total: number;
   onSelect: (strategy: AggregatedStrategy) => void;
   getChainIconUrl: (name: string) => string;
+  getTokenPairIcons: (pair: string) => { first: string; second: string } | null;
 }): JSX.Element {
   return (
     <div className="card-genora">
@@ -315,6 +464,7 @@ function StrategyTable({
         <table className="w-full">
           <thead>
             <tr className="border-b border-white/10">
+              <th className="text-left py-3 px-4 font-orbitron text-sm font-semibold text-[var(--neonAqua)]">Pair</th>
               <th className="text-left py-3 px-4 font-orbitron text-sm font-semibold text-[var(--neonAqua)]">Protocol</th>
               <th className="text-left py-3 px-4 font-orbitron text-sm font-semibold text-[var(--neonAqua)]">Chain</th>
               <th className="text-left py-3 px-4 font-orbitron text-sm font-semibold text-[var(--neonAqua)]">APY</th>
@@ -341,6 +491,48 @@ function StrategyTable({
                 }
               }}
             >
+              <td className="py-4 px-4">
+                <div className="flex items-center space-x-2">
+                  {(() => {
+                    const pair = strategy.token_pair || strategy.name;
+                    const icons = getTokenPairIcons(pair);
+                    
+                    if (icons) {
+                      return (
+                        <>
+                          <img 
+                            src={icons.first} 
+                            alt="" 
+                            width={16} 
+                            height={16} 
+                            loading="lazy" 
+                            onError={(e) => ((e.currentTarget.style.display = "none"))} 
+                            className="rounded" 
+                          />
+                          <img 
+                            src={icons.second} 
+                            alt="" 
+                            width={16} 
+                            height={16} 
+                            loading="lazy" 
+                            onError={(e) => ((e.currentTarget.style.display = "none"))} 
+                            className="rounded" 
+                          />
+                          <span className="font-orbitron text-sm font-semibold text-white">
+                            {pair}
+                          </span>
+                        </>
+                      );
+                    }
+                    
+                    return (
+                      <span className="font-orbitron text-sm font-semibold text-white">
+                        {pair || "—"}
+                      </span>
+                    );
+                  })()}
+                </div>
+              </td>
               <td className="py-4 px-4">
                 <div className="flex items-center space-x-2">
                   {strategy.icon_url && (
@@ -392,7 +584,7 @@ function StrategyTable({
           ))}
           {strategies.length === 0 && (
             <tr>
-              <td colSpan={8} className="py-8 text-center">
+              <td colSpan={9} className="py-8 text-center">
                 <div className="font-inter text-white/60">
                   No matching strategies found. Try adjusting your filters.
                 </div>

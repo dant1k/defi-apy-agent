@@ -29,9 +29,9 @@ export function formatPercent(value?: number | null, fractionDigits = 2): string
     return "-";
   }
   
-  // Handle very large numbers by capping them
-  if (Math.abs(value) > 999999) {
-    return "999999.00%";
+  // Handle very large numbers by capping them (increased limit for APY)
+  if (Math.abs(value) > 999999999) {
+    return "999999999.00%";
   }
   
   return `${value.toFixed(fractionDigits)}%`;
