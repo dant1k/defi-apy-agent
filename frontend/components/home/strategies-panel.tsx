@@ -122,17 +122,25 @@ export default function StrategiesPanel({ apiBaseUrl, chains, protocols, tokens 
 
   return (
     <div className="strategies-panel">
-      <header className="strategies-header">
-        <h2>Top DeFi Strategies</h2>
-        <p>
-          Подборка стратегий с учётом APY, роста TVL и риск-скоринга. Актуальность:{" "}
-          {fetchState.updatedAt ? new Date(fetchState.updatedAt).toLocaleString("ru-RU") : "—"}.
+      <header className="mb-8">
+        <h2 className="font-orbitron text-3xl font-bold text-[var(--neonAqua)] mb-4">
+          Top DeFi Strategies
+        </h2>
+        <p className="font-inter text-white/70 text-lg">
+          Advanced strategy filtering with AI-powered insights. Last updated:{" "}
+          {fetchState.updatedAt ? new Date(fetchState.updatedAt).toLocaleString("ru-RU") : "—"}
         </p>
       </header>
 
-      <section className="strategies-filters">
-        <div className="filter-group">
-          <label htmlFor="chain-select">Сеть</label>
+      <section className="card-genora mb-8">
+        <h3 className="font-orbitron text-xl font-bold text-[var(--neonAqua)] mb-6">
+          Advanced Filters
+        </h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="filter-group">
+            <label htmlFor="chain-select" className="font-orbitron text-sm font-semibold text-white mb-2 block">
+              Сеть
+            </label>
           <SearchableSelect
             value={filters.chain}
             onChange={(value) => setFilters(prev => ({ ...prev, chain: value }))}
@@ -149,94 +157,118 @@ export default function StrategiesPanel({ apiBaseUrl, chains, protocols, tokens 
           />
         </div>
 
-        <div className="filter-group">
-          <label htmlFor="protocol-select">Протокол</label>
-          <SearchableSelect
-            value={filters.protocol}
-            onChange={(value) => setFilters(prev => ({ ...prev, protocol: value }))}
-            options={[
-              { value: "all", label: "Все протоколы", icon: null },
-              ...protocols.map(item => ({
-                value: item,
-                label: formatLabel(item),
-                icon: getProtocolIconUrl(item)
-              }))
-            ]}
-            placeholder="Выберите протокол"
-            searchPlaceholder="Поиск протокола..."
-          />
-        </div>
+          <div className="filter-group">
+            <label htmlFor="protocol-select" className="font-orbitron text-sm font-semibold text-white mb-2 block">
+              Протокол
+            </label>
+            <SearchableSelect
+              value={filters.protocol}
+              onChange={(value) => setFilters(prev => ({ ...prev, protocol: value }))}
+              options={[
+                { value: "all", label: "Все протоколы", icon: null },
+                ...protocols.map(item => ({
+                  value: item,
+                  label: formatLabel(item),
+                  icon: getProtocolIconUrl(item)
+                }))
+              ]}
+              placeholder="Выберите протокол"
+              searchPlaceholder="Поиск протокола..."
+            />
+          </div>
 
-        <div className="filter-group">
-          <label htmlFor="token-select">Токен</label>
-          <SearchableSelect
-            value={filters.token}
-            onChange={(value) => setFilters(prev => ({ ...prev, token: value }))}
-            options={[
-              { value: "all", label: "Все токены", icon: null },
-              ...tokens.map(symbol => ({
-                value: symbol,
-                label: symbol,
-                icon: getTokenIconUrl(symbol)
-              }))
-            ]}
-            placeholder="Выберите токен"
-            searchPlaceholder="Поиск токена..."
-          />
-        </div>
+          <div className="filter-group">
+            <label htmlFor="token-select" className="font-orbitron text-sm font-semibold text-white mb-2 block">
+              Токен
+            </label>
+            <SearchableSelect
+              value={filters.token}
+              onChange={(value) => setFilters(prev => ({ ...prev, token: value }))}
+              options={[
+                { value: "all", label: "Все токены", icon: null },
+                ...tokens.map(symbol => ({
+                  value: symbol,
+                  label: symbol,
+                  icon: getTokenIconUrl(symbol)
+                }))
+              ]}
+              placeholder="Выберите токен"
+              searchPlaceholder="Поиск токена..."
+            />
+          </div>
 
-        {/* Поле поиска по токену удалено по просьбе пользователя */}
+          <div className="filter-group">
+            <label htmlFor="minTvl" className="font-orbitron text-sm font-semibold text-white mb-2 block">
+              Мин. TVL ($)
+            </label>
+            <input
+              id="minTvl"
+              name="minTvl"
+              type="number"
+              min={0}
+              step={100000}
+              value={filters.minTvl}
+              onChange={handleNumberChange}
+              className="w-full px-3 py-2 bg-[var(--graphiteGray)] border border-white/20 rounded text-white placeholder-white/50 focus:border-[var(--neonAqua)] focus:outline-none"
+              placeholder="0"
+            />
+          </div>
 
-        <div className="filter-group">
-          <label htmlFor="minTvl">Мин. TVL ($)</label>
-          <input
-            id="minTvl"
-            name="minTvl"
-            type="number"
-            min={0}
-            step={100000}
-            value={filters.minTvl}
-            onChange={handleNumberChange}
-          />
-        </div>
-
-        <div className="filter-group">
-          <label htmlFor="minApy">Мин. APY (%)</label>
-          <input
-            id="minApy"
-            name="minApy"
-            type="number"
-            min={0}
-            step={0.1}
-            value={filters.minApy}
-            onChange={handleNumberChange}
-          />
-        </div>
-
-      </section>
-
-      <section className="strategies-sorting">
-        <div className="sort-group">
-          <span>Сортировка</span>
-          <div className="sort-buttons">
-            {sortOptions.map((option) => (
-              <button
-                key={option.value}
-                type="button"
-                className={`sort-option${filters.sort === option.value ? " is-active" : ""}`}
-                onClick={() => setFilters((prev) => ({ ...prev, sort: option.value }))}
-              >
-                {option.label}
-              </button>
-            ))}
+          <div className="filter-group">
+            <label htmlFor="minApy" className="font-orbitron text-sm font-semibold text-white mb-2 block">
+              Мин. APY (%)
+            </label>
+            <input
+              id="minApy"
+              name="minApy"
+              type="number"
+              min={0}
+              step={0.1}
+              value={filters.minApy}
+              onChange={handleNumberChange}
+              className="w-full px-3 py-2 bg-[var(--graphiteGray)] border border-white/20 rounded text-white placeholder-white/50 focus:border-[var(--neonAqua)] focus:outline-none"
+              placeholder="0"
+            />
           </div>
         </div>
       </section>
 
-      {error && <div className="error-card">⚠️ {error}</div>}
+      <section className="card-genora mb-8">
+        <h3 className="font-orbitron text-xl font-bold text-[var(--neonAqua)] mb-6">
+          Sorting Options
+        </h3>
+        <div className="flex flex-wrap gap-3">
+          {sortOptions.map((option) => (
+            <button
+              key={option.value}
+              type="button"
+              className={`px-4 py-2 rounded font-medium transition-colors ${
+                filters.sort === option.value 
+                  ? 'bg-[var(--neonAqua)] text-black' 
+                  : 'bg-[var(--graphiteGray)] text-white/70 hover:text-white hover:border-[var(--neonAqua)] border border-transparent'
+              }`}
+              onClick={() => setFilters((prev) => ({ ...prev, sort: option.value }))}
+            >
+              {option.label}
+            </button>
+          ))}
+        </div>
+      </section>
+
+      {error && (
+        <div className="card-genora mb-8 border-red-500/50 bg-red-500/10">
+          <div className="font-inter text-red-400 text-center py-4">
+            {error}
+          </div>
+        </div>
+      )}
 
       {isLoading ? (
-        <StrategiesSkeleton />
+        <div className="card-genora">
+          <div className="text-center py-8">
+            <div className="font-inter text-white/60">Loading strategies...</div>
+          </div>
+        </div>
       ) : (
         <StrategyTable
           strategies={rows}
@@ -269,31 +301,40 @@ function StrategyTable({
   getChainIconUrl: (name: string) => string;
 }): JSX.Element {
   return (
-    <div className="strategy-table">
-      <div className="table-meta">Найдено стратегий: {total}</div>
-      <table>
-        <thead>
-          <tr>
-            <th>Стратегия</th>
-            <th>Протокол</th>
-            <th>Сеть</th>
-            <th>APY</th>
-            <th>TVL</th>
-            <th>Рост TVL 24ч</th>
-            <th>Риск</th>
-            <th>AI Score</th>
-            <th>Ссылка</th>
+    <div className="card-genora">
+      <div className="flex justify-between items-center mb-6">
+        <h3 className="font-orbitron text-xl font-bold text-[var(--neonAqua)]">
+          Strategy Results
+        </h3>
+        <div className="font-spacemono text-sm text-white/60">
+          Found: {total} strategies
+        </div>
+      </div>
+      
+      <div className="overflow-x-auto">
+        <table className="w-full">
+          <thead>
+            <tr className="border-b border-white/10">
+              <th className="text-left py-3 px-4 font-orbitron text-sm font-semibold text-[var(--neonAqua)]">Strategy</th>
+              <th className="text-left py-3 px-4 font-orbitron text-sm font-semibold text-[var(--neonAqua)]">Protocol</th>
+              <th className="text-left py-3 px-4 font-orbitron text-sm font-semibold text-[var(--neonAqua)]">Chain</th>
+              <th className="text-left py-3 px-4 font-orbitron text-sm font-semibold text-[var(--neonAqua)]">APY</th>
+              <th className="text-left py-3 px-4 font-orbitron text-sm font-semibold text-[var(--neonAqua)]">TVL</th>
+              <th className="text-left py-3 px-4 font-orbitron text-sm font-semibold text-[var(--neonAqua)]">TVL Growth 24h</th>
+              <th className="text-left py-3 px-4 font-orbitron text-sm font-semibold text-[var(--neonAqua)]">Risk</th>
+              <th className="text-left py-3 px-4 font-orbitron text-sm font-semibold text-[var(--neonAqua)]">AI Score</th>
+              <th className="text-left py-3 px-4 font-orbitron text-sm font-semibold text-[var(--neonAqua)]">Link</th>
           </tr>
         </thead>
         <tbody>
           {strategies.map((strategy) => (
             <tr
               key={strategy.id}
-              className="strategy-row"
+              className="border-b border-white/5 hover:bg-white/5 cursor-pointer transition-colors"
               onClick={() => onSelect(strategy)}
               tabIndex={0}
               role="button"
-              aria-label={`Подробнее о стратегии ${strategy.name}`}
+              aria-label={`View strategy details: ${strategy.name}`}
               onKeyDown={(event) => {
                 if (event.key === "Enter" || event.key === " ") {
                   event.preventDefault();
@@ -301,59 +342,79 @@ function StrategyTable({
                 }
               }}
             >
-              <td>
-                <div className="strategy-name">
+              <td className="py-4 px-4">
+                <div className="flex items-center space-x-3">
                   {strategy.icon_url && (
-                    <img src={strategy.icon_url} alt={strategy.protocol} loading="lazy" />
+                    <img src={strategy.icon_url} alt={strategy.protocol} loading="lazy" className="w-8 h-8 rounded" />
                   )}
                   <div>
-                    <strong>{strategy.name}</strong>
-                    {strategy.token_pair && <div className="token-pair">{strategy.token_pair}</div>}
-                    {strategy.ai_comment && <div className="ai-comment">{strategy.ai_comment}</div>}
+                    <div className="font-orbitron text-sm font-semibold text-white">{strategy.name}</div>
+                    {strategy.token_pair && <div className="font-inter text-xs text-white/60">{strategy.token_pair}</div>}
+                    {strategy.ai_comment && <div className="font-inter text-xs text-[var(--neonAqua)]">{strategy.ai_comment}</div>}
                   </div>
                 </div>
               </td>
-              <td>
-                <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+              <td className="py-4 px-4">
+                <div className="flex items-center space-x-2">
                   {strategy.icon_url && (
-                    <img src={strategy.icon_url} alt="" width={16} height={16} loading="lazy" onError={(e) => ((e.currentTarget.style.display = "none"))} />
+                    <img src={strategy.icon_url} alt="" width={16} height={16} loading="lazy" onError={(e) => ((e.currentTarget.style.display = "none"))} className="rounded" />
                   )}
-                  {formatLabel(strategy.protocol)}
+                  <span className="font-inter text-sm text-white">{formatLabel(strategy.protocol)}</span>
+                </div>
+              </td>
+              <td className="py-4 px-4">
+                <div className="flex items-center space-x-2">
+                  <img src={getChainIconUrl(strategy.chain)} alt="" width={16} height={16} loading="lazy" onError={(e) => ((e.currentTarget.style.display = "none"))} className="rounded" />
+                  <span className="font-inter text-sm text-white">{formatLabel(strategy.chain)}</span>
+                </div>
+              </td>
+              <td className="py-4 px-4">
+                <span className="font-spacemono text-sm font-bold text-[var(--profitGreen)]">{formatPercent(strategy.apy)}</span>
+              </td>
+              <td className="py-4 px-4">
+                <span className="font-spacemono text-sm text-white">{formatNumber(strategy.tvl_usd, 0)} $</span>
+              </td>
+              <td className={`py-4 px-4 ${strategy.tvl_growth_24h >= 0 ? "text-[var(--profitGreen)]" : "text-red-400"}`}>
+                <span className="font-spacemono text-sm font-medium">{formatPercent(strategy.tvl_growth_24h)}</span>
+              </td>
+              <td className="py-4 px-4">
+                <span className="font-spacemono text-sm text-white">
+                  {strategy.risk_index !== null ? strategy.risk_index.toFixed(2) : "—"}
                 </span>
               </td>
-              <td>
-                <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
-                  <img src={getChainIconUrl(strategy.chain)} alt="" width={16} height={16} loading="lazy" onError={(e) => ((e.currentTarget.style.display = "none"))} />
-                  {formatLabel(strategy.chain)}
+              <td className="py-4 px-4">
+                <span className="font-spacemono text-sm font-bold text-[var(--neonAqua)]">
+                  {strategy.ai_score !== null && strategy.ai_score !== undefined ? strategy.ai_score.toFixed(2) : "—"}
                 </span>
               </td>
-              <td>{formatPercent(strategy.apy)}</td>
-              <td>{formatNumber(strategy.tvl_usd, 0)} $</td>
-              <td className={strategy.tvl_growth_24h >= 0 ? "positive" : "negative"}>
-                {formatPercent(strategy.tvl_growth_24h)}
-              </td>
-              <td>{strategy.risk_index !== null ? strategy.risk_index.toFixed(2) : "—"}</td>
-              <td>{strategy.ai_score !== null && strategy.ai_score !== undefined ? strategy.ai_score.toFixed(2) : "—"}</td>
-              <td>
+              <td className="py-4 px-4">
                 {strategy.url ? (
-                  <a href={strategy.url} target="_blank" rel="noopener noreferrer">
-                    Открыть
+                  <a 
+                    href={strategy.url} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="button-genora text-xs px-3 py-1"
+                  >
+                    Open
                   </a>
                 ) : (
-                  "—"
+                  <span className="font-inter text-sm text-white/50">—</span>
                 )}
               </td>
             </tr>
           ))}
           {strategies.length === 0 && (
             <tr>
-              <td colSpan={9} className="empty-state">
-                Подходящих стратегий пока нет. Попробуй изменить фильтры.
+              <td colSpan={9} className="py-8 text-center">
+                <div className="font-inter text-white/60">
+                  No matching strategies found. Try adjusting your filters.
+                </div>
               </td>
             </tr>
           )}
         </tbody>
       </table>
+      </div>
     </div>
   );
 }

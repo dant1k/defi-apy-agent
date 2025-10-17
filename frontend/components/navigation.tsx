@@ -7,22 +7,30 @@ export function Navigation() {
   const pathname = usePathname();
 
   return (
-    <nav className="main-navigation">
-      <div className="nav-container">
-        <Link href="/" className="nav-logo">
-          DeFi APY Agent
+    <nav className="nav-genora">
+      <div className="flex items-center justify-between">
+        <Link href="/" className="font-orbitron text-xl font-bold text-white">
+          Genora
         </Link>
         
-        <div className="nav-links">
+        <div className="flex items-center space-x-6">
           <Link 
             href="/" 
-            className={`nav-link ${pathname === '/' ? 'active' : ''}`}
+            className={`font-inter font-medium transition-colors ${
+              pathname === '/' 
+                ? 'text-[var(--neonAqua)]' 
+                : 'text-white/75 hover:text-[var(--neonAqua)]'
+            }`}
           >
             Analytics Dashboard
           </Link>
           <Link 
             href="/strategies" 
-            className={`nav-link ${pathname === '/strategies' ? 'active' : ''}`}
+            className={`font-inter font-medium transition-colors ${
+              pathname === '/strategies' 
+                ? 'text-[var(--neonAqua)]' 
+                : 'text-white/75 hover:text-[var(--neonAqua)]'
+            }`}
           >
             Strategies
           </Link>

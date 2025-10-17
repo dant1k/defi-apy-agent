@@ -12,172 +12,10 @@ import { Watchlist } from '../../components/interactive/watchlist';
 import { WalletConnector } from '../../components/interactive/wallet-connector';
 import { GlobalSearch } from '../../components/search/global-search';
 import { MarketOverview } from '../../components/market/market-overview';
+import { AdvancedFilters } from '../../components/filters/advanced-filters';
+import { AISuggestions } from '../../components/ai/ai-suggestions';
 import './dashboard.css';
 
-// Remove old MarketOverview component - using the new one from components/market
-
-// Advanced Filters Component
-function AdvancedFilters({ onFiltersChange }: { onFiltersChange: (filters: any) => void }) {
-  const [filters, setFilters] = useState({
-    period: '24h',
-    strategyType: 'all',
-    riskLevel: 'all',
-    assetType: 'all',
-    trending: false,
-    newPools: false,
-  });
-
-  const handleFilterChange = (key: string, value: any) => {
-    const newFilters = { ...filters, [key]: value };
-    setFilters(newFilters);
-    onFiltersChange(newFilters);
-  };
-
-  return (
-    <div className="advanced-filters">
-      <div className="filter-section">
-        <h3>Период данных</h3>
-        <div className="filter-options">
-          {['24h', '7d', '30d'].map(period => (
-            <button
-              key={period}
-              className={`filter-btn ${filters.period === period ? 'active' : ''}`}
-              onClick={() => handleFilterChange('period', period)}
-            >
-              {period}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <div className="filter-section">
-        <h3>Тип стратегии</h3>
-        <div className="filter-options">
-          {['all', 'Lending', 'LP', 'Vaults', 'Staking', 'Real Yield', 'AI Vaults'].map(type => (
-            <button
-              key={type}
-              className={`filter-btn ${filters.strategyType === type ? 'active' : ''}`}
-              onClick={() => handleFilterChange('strategyType', type)}
-            >
-              {type}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <div className="filter-section">
-        <h3>Риск-уровень</h3>
-        <div className="filter-options">
-          {['all', 'Low', 'Medium', 'High'].map(risk => (
-            <button
-              key={risk}
-              className={`filter-btn risk-${risk.toLowerCase()} ${filters.riskLevel === risk ? 'active' : ''}`}
-              onClick={() => handleFilterChange('riskLevel', risk)}
-            >
-              {risk}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <div className="filter-section">
-        <h3>Тип активов</h3>
-        <div className="filter-options">
-          {['all', 'Stable', 'Volatile'].map(type => (
-            <button
-              key={type}
-              className={`filter-btn ${filters.assetType === type ? 'active' : ''}`}
-              onClick={() => handleFilterChange('assetType', type)}
-            >
-              {type}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <div className="filter-section">
-        <h3>Тренды</h3>
-        <div className="filter-options">
-          <label className="checkbox-label">
-            <input
-              type="checkbox"
-              checked={filters.trending}
-              onChange={(e) => handleFilterChange('trending', e.target.checked)}
-            />
-            Trending
-          </label>
-          <label className="checkbox-label">
-            <input
-              type="checkbox"
-              checked={filters.newPools}
-              onChange={(e) => handleFilterChange('newPools', e.target.checked)}
-            />
-            New Pools
-          </label>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// AI Suggestions Component
-function AISuggestions() {
-  const suggestions = [
-    {
-      id: 1,
-      name: "Aave V3 USDC",
-      apy: 8.5,
-      risk: "Low",
-      reason: "High TVL stability with consistent yield",
-      chain: "Ethereum",
-      icon: "🏛️"
-    },
-    {
-      id: 2,
-      name: "Uniswap V3 ETH/USDC",
-      apy: 12.3,
-      risk: "Medium",
-      reason: "Optimal liquidity range with growing volume",
-      chain: "Ethereum",
-      icon: "🔄"
-    },
-    {
-      id: 3,
-      name: "Compound USDT",
-      apy: 6.8,
-      risk: "Low",
-      reason: "Stable lending protocol with proven track record",
-      chain: "Ethereum",
-      icon: "💰"
-    }
-  ];
-
-  return (
-    <div className="ai-suggestions">
-      <h2>AI Smart Suggestions</h2>
-      <div className="suggestions-grid">
-        {suggestions.map(suggestion => (
-          <div key={suggestion.id} className="suggestion-card">
-            <div className="suggestion-header">
-              <div className="suggestion-title">
-                <span className="suggestion-icon">{suggestion.icon}</span>
-                <h4>{suggestion.name}</h4>
-              </div>
-              <span className={`risk-badge risk-${suggestion.risk.toLowerCase()}`}>
-                {suggestion.risk}
-              </span>
-            </div>
-            <div className="suggestion-apy">{suggestion.apy}% APY</div>
-            <div className="suggestion-reason">{suggestion.reason}</div>
-            <div className="suggestion-chain">{suggestion.chain}</div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-// Main Dashboard Component
 export default function DashboardClient() {
   const [strategies, setStrategies] = useState<AggregatedStrategy[]>([]);
   const [loading, setLoading] = useState(true);
@@ -217,35 +55,44 @@ export default function DashboardClient() {
   };
 
   return (
-    <div className="dashboard">
-      <div className="dashboard-header">
-        <h1>DeFi Analytics Dashboard</h1>
-        <p>AI-powered insights for optimal yield strategies</p>
-      </div>
+    <div className="min-h-screen bg-[var(--darkVoid)] pt-20">
+      <div className="container mx-auto px-6 py-8">
+        <div className="text-center mb-12">
+          <h1 className="font-orbitron text-4xl font-bold text-[var(--neonAqua)] mb-4">
+            DeFi Analytics Dashboard
+          </h1>
+          <p className="font-inter text-white/80 text-lg">
+            AI-powered insights for optimal yield strategies
+          </p>
+        </div>
 
-      <GlobalSearch 
-        strategies={strategies}
-        onResultClick={(result) => {
-          console.log('Search result clicked:', result);
-          // TODO: Navigate to result or show details
-        }}
-      />
+        <GlobalSearch 
+          strategies={strategies}
+          onResultClick={(result) => {
+            console.log('Search result clicked:', result);
+          }}
+        />
 
-      <MarketOverview strategies={strategies} />
+        <MarketOverview />
 
-      <div className="dashboard-content">
-        <div className="dashboard-sidebar">
+        <AdvancedFilters onFiltersChange={handleFiltersChange} />
+
+        <AISuggestions strategies={strategies} />
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+          <div className="lg:col-span-2">
+            <AIAlerts strategies={strategies} />
+          </div>
+          <div>
+            <Watchlist strategies={strategies} />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
           <WalletConnector />
-          <Watchlist strategies={strategies} />
-          <AdvancedFilters onFiltersChange={handleFiltersChange} />
         </div>
 
         <div className="dashboard-main">
-          <AISuggestions />
-          
-          {/* AI Alerts */}
-          <AIAlerts strategies={strategies} />
-          
           {/* Strategy Chart */}
           {strategies.length > 0 && (
             <StrategyChart 
@@ -265,44 +112,60 @@ export default function DashboardClient() {
             <AIScoring strategy={strategies[0]} />
           )}
           
-          <div className="strategies-section">
-            <h2>Top Strategies</h2>
+          <div className="card-genora">
+            <h2 className="font-orbitron text-2xl font-bold text-[var(--neonAqua)] mb-6">
+              Top Strategies
+            </h2>
             {loading ? (
-              <div className="loading">Loading strategies...</div>
+              <div className="text-center py-8">
+                <div className="font-inter text-white/60">Loading strategies...</div>
+              </div>
             ) : (
-              <div className="strategies-grid">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {strategies.slice(0, 12).map(strategy => (
                   <div 
                     key={strategy.id} 
-                    className="strategy-card"
+                    className="card-genora cursor-pointer hover:shadow-glow transition-all duration-300"
                     onClick={() => {
                       setSelectedStrategy(strategy);
                       setShowExplainer(true);
                     }}
-                    style={{ cursor: 'pointer' }}
                   >
-                    <div className="strategy-header">
-                      <h4>{strategy.name}</h4>
-                      <span className="strategy-chain">{strategy.chain}</span>
-                    </div>
-                    <div className="strategy-metrics">
-                      <div className="metric">
-                        <span className="metric-label">APY</span>
-                        <span className="metric-value">{strategy.apy.toFixed(2)}%</span>
-                      </div>
-                      <div className="metric">
-                        <span className="metric-label">TVL</span>
-                        <span className="metric-value">${(strategy.tvl_usd / 1000000).toFixed(1)}M</span>
-                      </div>
-                      <div className="metric">
-                        <span className="metric-label">AI Score</span>
-                        <span className="metric-value">{strategy.ai_score?.toFixed(1) || 'N/A'}</span>
+                    <div className="flex justify-between items-start mb-3">
+                      <h3 className="font-orbitron text-lg font-semibold text-white">
+                        {strategy.name}
+                      </h3>
+                      <div className="font-spacemono text-xl font-bold text-[var(--profitGreen)]">
+                        {strategy.apy.toFixed(2)}%
                       </div>
                     </div>
-                    <div className="strategy-protocol">{strategy.protocol}</div>
-                    <div className="strategy-actions">
-                      <button className="explain-btn">Explain</button>
+                    
+                    <div className="space-y-2 mb-4">
+                      <div className="flex justify-between">
+                        <span className="font-inter text-white/60 text-sm">TVL</span>
+                        <span className="font-spacemono text-sm font-medium text-white">
+                          ${(strategy.tvl_usd / 1000000).toFixed(1)}M
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="font-inter text-white/60 text-sm">Chain</span>
+                        <span className="font-inter text-sm font-medium text-white">
+                          {strategy.chain}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="font-inter text-white/60 text-sm">AI Score</span>
+                        <span className="font-spacemono text-sm font-medium text-[var(--neonAqua)]">
+                          {strategy.ai_score?.toFixed(1) || 'N/A'}
+                        </span>
+                      </div>
                     </div>
+                    
+                    <div className="font-inter text-white/50 text-xs mb-3">{strategy.protocol}</div>
+                    
+                    <button className="button-genora w-full text-sm">
+                      Explain Strategy
+                    </button>
                   </div>
                 ))}
               </div>

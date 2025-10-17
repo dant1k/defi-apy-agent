@@ -5,8 +5,8 @@ import { HomeSkeleton } from "../../components/home/home-skeleton";
 
 export const dynamic = "force-static";
 export const revalidate = 300;
-const HomeClient = NextDynamic(
-  () => import("../../components/home/home-client").then((mod) => mod.HomeClient),
+const StrategiesClient = NextDynamic(
+  () => import("../../components/strategies/strategies-client").then((mod) => mod.StrategiesClient),
   {
     ssr: false,
     loading: () => <HomeSkeleton />,
@@ -14,14 +14,14 @@ const HomeClient = NextDynamic(
 );
 
 export const metadata: Metadata = {
-  title: "DeFi Strategies | DeFi APY Agent",
-  description: "Подбор DeFi-стратегий и аналитика APY с минимальной задержкой",
+  title: "DeFi Strategies | Genora",
+  description: "Advanced DeFi strategy filtering and analysis with AI-powered insights",
 };
 
 export default function StrategiesPage(): JSX.Element {
   return (
     <Suspense fallback={<HomeSkeleton />}>
-      <HomeClient />
+      <StrategiesClient />
     </Suspense>
   );
 }

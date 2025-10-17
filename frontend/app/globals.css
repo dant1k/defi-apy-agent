@@ -2,6 +2,134 @@
 @tailwind components;
 @tailwind utilities;
 
+/* === GENORA — AI DEFI AGGREGATOR THEME === */
+
+/* 1. FONTS */
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700&family=Inter:wght@400;500;700&family=Space+Mono:wght@400;700&display=swap');
+
+:root {
+  /* 2. BRAND COLORS */
+  --darkVoid: #0B0E13;      /* main background */
+  --graphiteGray: #1C1F26;  /* cards / containers */
+  --neonAqua: #00F6FF;      /* primary accent */
+  --cyberViolet: #6C63FF;   /* secondary accent */
+  --profitGreen: #00D68F;   /* success / APY highlight */
+  --pureWhite: #FFFFFF;     /* text / contrast */
+  --glow: rgba(0,246,255,0.25);
+}
+
+/* 3. GLOBAL LAYOUT */
+html, body {
+  background-color: var(--darkVoid);
+  color: var(--pureWhite);
+  font-family: 'Inter', sans-serif;
+  margin: 0;
+  padding: 0;
+}
+
+h1, h2, h3, .font-orbitron {
+  font-family: 'Orbitron', sans-serif;
+  letter-spacing: 0.5px;
+}
+
+.font-spacemono {
+  font-family: 'Space Mono', monospace;
+}
+
+/* 4. COMPONENTS */
+
+/* Buttons */
+.button-genora {
+  background: linear-gradient(90deg, var(--neonAqua), var(--cyberViolet));
+  color: #000;
+  font-family: 'Orbitron', sans-serif;
+  font-weight: bold;
+  padding: 0.8rem 1.8rem;
+  border-radius: 12px;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 0 25px rgba(0,246,255,0.3);
+  transition: all 0.25s ease;
+}
+.button-genora:hover {
+  transform: scale(1.03);
+  box-shadow: 0 0 35px rgba(0,246,255,0.6);
+}
+
+/* Cards */
+.card-genora {
+  background: var(--graphiteGray);
+  border: 1px solid rgba(0,246,255,0.2);
+  border-radius: 20px;
+  padding: 1.5rem;
+  transition: 0.3s;
+}
+.card-genora:hover {
+  border-color: rgba(0,246,255,0.4);
+  box-shadow: 0 0 20px rgba(0,246,255,0.15);
+}
+
+/* Section titles */
+.section-title {
+  font-family: 'Orbitron', sans-serif;
+  color: var(--neonAqua);
+  text-align: center;
+  font-size: 2rem;
+  margin-bottom: 2rem;
+}
+
+/* Glow background */
+.bg-glow {
+  background: radial-gradient(circle at 30% 50%, rgba(0,246,255,0.05), transparent 70%);
+}
+
+/* Stats blocks */
+.stat-genora {
+  background: var(--graphiteGray);
+  border: 1px solid rgba(0,246,255,0.25);
+  border-radius: 16px;
+  text-align: center;
+  padding: 1.2rem;
+}
+.stat-genora h3 {
+  color: var(--neonAqua);
+  font-family: 'Orbitron', sans-serif;
+  font-size: 1.2rem;
+  margin-bottom: 0.5rem;
+}
+.stat-genora p {
+  color: var(--profitGreen);
+  font-family: 'Space Mono', monospace;
+  font-size: 1.4rem;
+}
+
+/* Navigation */
+.nav-genora {
+  backdrop-filter: blur(6px);
+  background: rgba(0,0,0,0.3);
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  padding: 0.8rem 2rem;
+  position: fixed;
+  width: 100%;
+  top: 0;
+  left: 0;
+  z-index: 50;
+}
+.nav-genora a {
+  color: rgba(255,255,255,0.75);
+  margin-left: 1.2rem;
+  text-decoration: none;
+  transition: 0.2s;
+}
+.nav-genora a:hover {
+  color: var(--neonAqua);
+}
+
+/* Utility shadows */
+.shadow-glow {
+  box-shadow: 0 0 40px rgba(0,246,255,0.3);
+}
+
 /* Custom Select Styles */
 .custom-select {
   position: relative;

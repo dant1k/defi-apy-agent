@@ -13,10 +13,10 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: {
-    default: "DeFi Analytics Dashboard | DeFi APY Agent",
-    template: "%s · DeFi APY Agent",
+    default: "Genora - AI DeFi Aggregator",
+    template: "%s · Genora",
   },
-  description: "Professional DeFi analytics dashboard with AI-powered insights, risk analysis, and yield optimization tools.",
+  description: "AI-powered DeFi analytics and yield optimization platform with advanced market insights, risk analysis, and smart strategy recommendations.",
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {

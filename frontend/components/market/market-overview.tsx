@@ -12,7 +12,7 @@ interface MarketTrend {
 }
 
 interface MarketOverviewProps {
-  strategies: any[];
+  strategies?: any[];
 }
 
 export function MarketOverview({ strategies }: MarketOverviewProps) {
@@ -28,20 +28,23 @@ export function MarketOverview({ strategies }: MarketOverviewProps) {
   const [trends, setTrends] = useState<MarketTrend[]>([]);
 
   useEffect(() => {
+    // Ensure strategies is an array
+    const safeStrategies = strategies || [];
+    
     // Calculate market data from strategies
-    const totalTvl = strategies.reduce((sum, s) => sum + (s.tvl_usd || 0), 0);
-    const totalStrategies = strategies.length;
-    const avgApy = strategies.length > 0 
-      ? strategies.reduce((sum, s) => sum + (s.apy || 0), 0) / strategies.length 
+    const totalTvl = safeStrategies.reduce((sum, s) => sum + (s.tvl_usd || 0), 0);
+    const totalStrategies = safeStrategies.length;
+    const avgApy = safeStrategies.length > 0 
+      ? safeStrategies.reduce((sum, s) => sum + (s.apy || 0), 0) / safeStrategies.length 
       : 0;
 
     // Find top protocol and chain
-    const protocolCounts = strategies.reduce((acc, s) => {
+    const protocolCounts = safeStrategies.reduce((acc, s) => {
       acc[s.protocol] = (acc[s.protocol] || 0) + 1;
       return acc;
     }, {} as Record<string, number>);
 
-    const chainCounts = strategies.reduce((acc, s) => {
+    const chainCounts = safeStrategies.reduce((acc, s) => {
       acc[s.chain] = (acc[s.chain] || 0) + 1;
       return acc;
     }, {} as Record<string, number>);
@@ -135,97 +138,105 @@ export function MarketOverview({ strategies }: MarketOverviewProps) {
   };
 
   return (
-    <div className="market-overview">
-      <div className="market-header">
-        <h2>Market Overview</h2>
-        <div className="last-update">
+    <div className="card-genora mb-8">
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="font-orbitron text-2xl font-bold text-[var(--neonAqua)]">
+          Market Overview
+        </h2>
+        <div className="font-spacemono text-sm text-white/60">
           Last updated: {marketData.lastUpdate.toLocaleTimeString('ru-RU')}
         </div>
       </div>
 
-      <div className="market-stats">
-        <div className="stat-card primary">
-          <div className="stat-content">
-            <h3>Total Market TVL</h3>
-            <div className="stat-value">{formatTvl(marketData.totalTvl)}</div>
-            <div className="stat-change positive">+5.2%</div>
-          </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+        <div className="stat-genora shadow-glow">
+          <h3>Total Market TVL</h3>
+          <p className="font-spacemono text-2xl font-bold">{formatTvl(marketData.totalTvl)}</p>
+          <div className="text-[var(--profitGreen)] text-sm font-medium">+5.2%</div>
         </div>
 
-        <div className="stat-card">
-          <div className="stat-content">
-            <h3>Active Strategies</h3>
-            <div className="stat-value">{marketData.totalStrategies}</div>
-            <div className="stat-change positive">+12 new</div>
-          </div>
+        <div className="stat-genora">
+          <h3>Active Strategies</h3>
+          <p className="font-spacemono text-2xl font-bold">{marketData.totalStrategies}</p>
+          <div className="text-[var(--profitGreen)] text-sm font-medium">+12 new</div>
         </div>
 
-        <div className="stat-card">
-          <div className="stat-content">
-            <h3>Average APY</h3>
-            <div className="stat-value">{marketData.avgApy.toFixed(2)}%</div>
-            <div className="stat-change positive">+0.8%</div>
-          </div>
+        <div className="stat-genora">
+          <h3>Average APY</h3>
+          <p className="font-spacemono text-2xl font-bold">{marketData.avgApy.toFixed(2)}%</p>
+          <div className="text-[var(--profitGreen)] text-sm font-medium">+0.8%</div>
         </div>
 
-        <div className="stat-card">
-          <div className="stat-content">
-            <h3>Top Protocol</h3>
-            <div className={`stat-value ${marketData.topProtocol.length > 15 ? 'long-text' : ''}`}>
-              {marketData.topProtocol}
-            </div>
-            <div className="stat-change">Leading</div>
-          </div>
+        <div className="stat-genora">
+          <h3>Top Protocol</h3>
+          <p className="font-spacemono text-lg font-bold break-words">
+            {marketData.topProtocol}
+          </p>
+          <div className="text-white/60 text-sm">Leading</div>
         </div>
 
-        <div className="stat-card">
-          <div className="stat-content">
-            <h3>Top Chain</h3>
-            <div className="stat-value">{marketData.topChain}</div>
-            <div className="stat-change">Dominant</div>
-          </div>
+        <div className="stat-genora">
+          <h3>Top Chain</h3>
+          <p className="font-spacemono text-2xl font-bold">{marketData.topChain}</p>
+          <div className="text-white/60 text-sm">Dominant</div>
         </div>
       </div>
 
-      <div className="market-trends">
-        <h3>Market Trends</h3>
-        <div className="trends-grid">
+      <div className="mt-8">
+        <h3 className="font-orbitron text-xl font-bold text-[var(--neonAqua)] mb-4">
+          Market Trends
+        </h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {trends.map(trend => (
             <div 
               key={trend.id} 
-              className="trend-card"
+              className="card-genora"
               style={{ borderLeftColor: getTrendColor(trend.type) }}
             >
-              <div className="trend-header">
-                <div className="trend-icon">{getTrendIcon(trend.category)}</div>
-                <div className="trend-title">{trend.title}</div>
-                <div 
-                  className="trend-change"
-                  style={{ color: getTrendColor(trend.type) }}
-                >
+              <div className="flex justify-between items-start mb-2">
+                <h4 className="font-orbitron text-lg font-semibold text-white">
+                  {trend.title}
+                </h4>
+                <span className={`font-spacemono font-bold ${
+                  trend.change > 0 ? 'text-[var(--profitGreen)]' : 'text-red-400'
+                }`}>
                   {trend.change > 0 ? '+' : ''}{trend.change.toFixed(1)}%
-                </div>
+                </span>
               </div>
-              <p className="trend-description">{trend.description}</p>
+              <p className="font-inter text-white/70 text-sm">{trend.description}</p>
             </div>
           ))}
         </div>
       </div>
 
-      <div className="market-insights">
-        <h3>AI Market Insights</h3>
-        <div className="insights-grid">
-          <div className="insight-card">
-            <h4>Yield Optimization</h4>
-            <p>AI algorithms are identifying 23% more profitable strategies this week compared to manual selection.</p>
+      <div className="mt-8">
+        <h3 className="font-orbitron text-xl font-bold text-[var(--neonAqua)] mb-4">
+          AI Market Insights
+        </h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="card-genora">
+            <h4 className="font-orbitron text-lg font-semibold text-[var(--neonAqua)] mb-2">
+              Yield Optimization
+            </h4>
+            <p className="font-inter text-white/70 text-sm">
+              AI algorithms are identifying 23% more profitable strategies this week compared to manual selection.
+            </p>
           </div>
-          <div className="insight-card">
-            <h4>Risk Management</h4>
-            <p>Smart risk scoring has prevented 15 potential losses in high-volatility strategies.</p>
+          <div className="card-genora">
+            <h4 className="font-orbitron text-lg font-semibold text-[var(--neonAqua)] mb-2">
+              Risk Management
+            </h4>
+            <p className="font-inter text-white/70 text-sm">
+              Smart risk scoring has prevented 15 potential losses in high-volatility strategies.
+            </p>
           </div>
-          <div className="insight-card">
-            <h4>Market Dynamics</h4>
-            <p>Layer 2 protocols are showing 40% faster growth than mainnet alternatives.</p>
+          <div className="card-genora">
+            <h4 className="font-orbitron text-lg font-semibold text-[var(--neonAqua)] mb-2">
+              Market Dynamics
+            </h4>
+            <p className="font-inter text-white/70 text-sm">
+              Layer 2 protocols are showing 40% faster growth than mainnet alternatives.
+            </p>
           </div>
         </div>
       </div>
