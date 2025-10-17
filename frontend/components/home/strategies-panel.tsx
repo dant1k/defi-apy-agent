@@ -315,7 +315,6 @@ function StrategyTable({
         <table className="w-full">
           <thead>
             <tr className="border-b border-white/10">
-              <th className="text-left py-3 px-4 font-orbitron text-sm font-semibold text-[var(--neonAqua)]">Strategy</th>
               <th className="text-left py-3 px-4 font-orbitron text-sm font-semibold text-[var(--neonAqua)]">Protocol</th>
               <th className="text-left py-3 px-4 font-orbitron text-sm font-semibold text-[var(--neonAqua)]">Chain</th>
               <th className="text-left py-3 px-4 font-orbitron text-sm font-semibold text-[var(--neonAqua)]">APY</th>
@@ -342,18 +341,6 @@ function StrategyTable({
                 }
               }}
             >
-              <td className="py-4 px-4">
-                <div className="flex items-center space-x-3">
-                  {strategy.icon_url && (
-                    <img src={strategy.icon_url} alt={strategy.protocol} loading="lazy" className="w-8 h-8 rounded" />
-                  )}
-                  <div>
-                    <div className="font-orbitron text-sm font-semibold text-white">{strategy.name}</div>
-                    {strategy.token_pair && <div className="font-inter text-xs text-white/60">{strategy.token_pair}</div>}
-                    {strategy.ai_comment && <div className="font-inter text-xs text-[var(--neonAqua)]">{strategy.ai_comment}</div>}
-                  </div>
-                </div>
-              </td>
               <td className="py-4 px-4">
                 <div className="flex items-center space-x-2">
                   {strategy.icon_url && (
@@ -405,7 +392,7 @@ function StrategyTable({
           ))}
           {strategies.length === 0 && (
             <tr>
-              <td colSpan={9} className="py-8 text-center">
+              <td colSpan={8} className="py-8 text-center">
                 <div className="font-inter text-white/60">
                   No matching strategies found. Try adjusting your filters.
                 </div>
