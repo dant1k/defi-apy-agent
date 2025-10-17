@@ -359,7 +359,7 @@ function StrategyTable({
                 <span className="font-spacemono text-sm font-bold text-[var(--profitGreen)]">{formatPercent(strategy.apy)}</span>
               </td>
               <td className="py-4 px-4">
-                <span className="font-spacemono text-sm text-white">{formatNumber(strategy.tvl_usd, 0)} $</span>
+                <span className="font-spacemono text-sm text-white">{formatNumber(strategy.tvl_usd, 2)} $</span>
               </td>
               <td className={`py-4 px-4 ${strategy.tvl_growth_24h >= 0 ? "text-[var(--profitGreen)]" : "text-red-400"}`}>
                 <span className="font-spacemono text-sm font-medium">{formatPercent(strategy.tvl_growth_24h)}</span>
