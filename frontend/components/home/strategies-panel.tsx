@@ -134,7 +134,7 @@ export default function StrategiesPanel({ apiBaseUrl, chains, protocols, tokens 
       <section className="strategies-filters">
         <div className="filter-group">
           <label htmlFor="chain-select">Сеть</label>
-          <CustomSelect
+          <SearchableSelect
             value={filters.chain}
             onChange={(value) => setFilters(prev => ({ ...prev, chain: value }))}
             options={[
@@ -146,12 +146,13 @@ export default function StrategiesPanel({ apiBaseUrl, chains, protocols, tokens 
               }))
             ]}
             placeholder="Выберите сеть"
+            searchPlaceholder="Поиск сети..."
           />
         </div>
 
         <div className="filter-group">
           <label htmlFor="protocol-select">Протокол</label>
-          <CustomSelect
+          <SearchableSelect
             value={filters.protocol}
             onChange={(value) => setFilters(prev => ({ ...prev, protocol: value }))}
             options={[
@@ -163,12 +164,13 @@ export default function StrategiesPanel({ apiBaseUrl, chains, protocols, tokens 
               }))
             ]}
             placeholder="Выберите протокол"
+            searchPlaceholder="Поиск протокола..."
           />
         </div>
 
         <div className="filter-group">
           <label htmlFor="token-select">Токен</label>
-          <CustomSelect
+          <SearchableSelect
             value={filters.token}
             onChange={(value) => setFilters(prev => ({ ...prev, token: value }))}
             options={[
@@ -180,6 +182,7 @@ export default function StrategiesPanel({ apiBaseUrl, chains, protocols, tokens 
               }))
             ]}
             placeholder="Выберите токен"
+            searchPlaceholder="Поиск токена..."
           />
         </div>
 
@@ -409,6 +412,14 @@ type CustomSelectProps = {
   placeholder?: string;
 };
 
+type SearchableSelectProps = {
+  value: string;
+  onChange: (value: string) => void;
+  options: SelectOption[];
+  placeholder?: string;
+  searchPlaceholder?: string;
+};
+
 function CustomSelect({ value, onChange, options, placeholder }: CustomSelectProps) {
   const [isOpen, setIsOpen] = useState(false);
   const selectRef = useRef<HTMLDivElement>(null);
@@ -468,6 +479,107 @@ function CustomSelect({ value, onChange, options, placeholder }: CustomSelectPro
               <span>{option.label}</span>
             </div>
           ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function SearchableSelect({ value, onChange, options, placeholder, searchPlaceholder = "Поиск..." }: SearchableSelectProps) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const selectRef = useRef<HTMLDivElement>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
+  const selectedOption = options.find(option => option.value === value);
+
+  // Фильтруем опции по поисковому запросу
+  const filteredOptions = options.filter(option =>
+    option.label.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (selectRef.current && !selectRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+        setSearchQuery("");
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  useEffect(() => {
+    if (isOpen && searchInputRef.current) {
+      searchInputRef.current.focus();
+    }
+  }, [isOpen]);
+
+  const handleOptionClick = (optionValue: string) => {
+    onChange(optionValue);
+    setIsOpen(false);
+    setSearchQuery("");
+  };
+
+  return (
+    <div className="custom-select" ref={selectRef}>
+      <div 
+        className={`custom-select__trigger ${isOpen ? 'is-open' : ''}`}
+        onClick={() => setIsOpen(!isOpen)}
+      >
+        <div className="custom-select__value">
+          {selectedOption?.icon && (
+            <IconWithFallback 
+              src={selectedOption.icon} 
+              alt="" 
+              width={18} 
+              height={18}
+            />
+          )}
+          <span>{selectedOption?.label || placeholder}</span>
+        </div>
+        <div className="custom-select__arrow">▼</div>
+      </div>
+      
+      {isOpen && (
+        <div className="custom-select__options">
+          <div className="custom-select__search">
+            <input
+              ref={searchInputRef}
+              type="text"
+              placeholder={searchPlaceholder}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="custom-select__search-input"
+              onClick={(e) => e.stopPropagation()}
+            />
+          </div>
+          <div className="custom-select__options-list">
+            {filteredOptions.length > 0 ? (
+              filteredOptions.map((option) => (
+                <div
+                  key={option.value}
+                  className={`custom-select__option ${option.value === value ? 'is-selected' : ''}`}
+                  onClick={() => handleOptionClick(option.value)}
+                >
+                  {option.icon && (
+                    <IconWithFallback 
+                      src={option.icon} 
+                      alt="" 
+                      width={18} 
+                      height={18}
+                    />
+                  )}
+                  <span>{option.label}</span>
+                </div>
+              ))
+            ) : (
+              <div className="custom-select__no-results">
+                Ничего не найдено
+              </div>
+            )}
+          </div>
         </div>
       )}
     </div>
