@@ -1,9 +1,11 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { SimpleCharts } from '../charts/simple-charts';
 import { StrategySearch } from '../search/strategy-search';
+import { AutoRefresh } from '../real-time/auto-refresh';
+import { StrategyAlerts } from '../notifications/strategy-alerts';
 
 interface Strategy {
   id: string;
@@ -103,43 +105,47 @@ const mockStrategies: Strategy[] = [
 
 export default function MockIntelligenceDashboard() {
   const [strategies, setStrategies] = useState<Strategy[]>([]);
+  const [previousStrategies, setPreviousStrategies] = useState<Strategy[]>([]);
   const [loading, setLoading] = useState(true);
   const [apiStatus, setApiStatus] = useState<'connected' | 'disconnected' | 'testing'>('testing');
 
-  useEffect(() => {
-    const loadData = async () => {
+  const loadData = async () => {
+    try {
+      setLoading(true);
+      setApiStatus('testing');
+      
+      // Save current strategies as previous
+      setPreviousStrategies(strategies);
+      
+      // Try to connect to real API
       try {
-        setLoading(true);
-        setApiStatus('testing');
-        
-        // Try to connect to real API
-        try {
-          const response = await fetch('http://localhost:8000/strategies?limit=10&sort=ai_score_desc');
-          if (response.ok) {
-            const data = await response.json();
-            if (data.items && data.items.length > 0) {
-              setStrategies(data.items);
-              setApiStatus('connected');
-              return;
-            }
+        const response = await fetch('http://localhost:8000/strategies?limit=10&sort=ai_score_desc');
+        if (response.ok) {
+          const data = await response.json();
+          if (data.items && data.items.length > 0) {
+            setStrategies(data.items);
+            setApiStatus('connected');
+            return;
           }
-        } catch (error) {
-          console.log('API not available, using mock data');
         }
-        
-        // Use mock data if API is not available
-        setStrategies(mockStrategies);
-        setApiStatus('disconnected');
-        
       } catch (error) {
-        console.error('Error loading data:', error);
-        setStrategies(mockStrategies);
-        setApiStatus('disconnected');
-      } finally {
-        setLoading(false);
+        console.log('API not available, using mock data');
       }
-    };
+      
+      // Use mock data if API is not available
+      setStrategies(mockStrategies);
+      setApiStatus('disconnected');
+      
+    } catch (error) {
+      console.error('Error loading data:', error);
+      setStrategies(mockStrategies);
+      setApiStatus('disconnected');
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     loadData();
   }, []);
 
@@ -167,6 +173,12 @@ export default function MockIntelligenceDashboard() {
 
   return (
     <div className="min-h-screen bg-black text-white p-6">
+      {/* Strategy Alerts */}
+      <StrategyAlerts 
+        strategies={strategies} 
+        previousStrategies={previousStrategies}
+      />
+      
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <motion.div 
@@ -200,7 +212,7 @@ export default function MockIntelligenceDashboard() {
             AI-powered DeFi analytics with real-time data
           </motion.p>
           <motion.div 
-            className="mt-4"
+            className="mt-4 space-y-3"
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.5, duration: 0.4 }}
@@ -228,6 +240,13 @@ export default function MockIntelligenceDashboard() {
                apiStatus === 'disconnected' ? '⚠️ Demo Mode' : 
                '🔄 Testing Connection'}
             </motion.span>
+            
+            {/* Auto-refresh component */}
+            <AutoRefresh 
+              onRefresh={loadData}
+              interval={120000} // 2 minutes
+              enabled={apiStatus === 'connected'}
+            />
           </motion.div>
         </motion.div>
 
