@@ -9,7 +9,6 @@ import { AIScoring } from '../../components/ai/ai-scoring';
 import { AIAlerts } from '../../components/ai/ai-alerts';
 import { StrategyExplainer } from '../../components/ai/strategy-explainer';
 import { Watchlist } from '../../components/interactive/watchlist';
-import { WalletConnector } from '../../components/interactive/wallet-connector';
 import { GlobalSearch } from '../../components/search/global-search';
 import { MarketOverview } from '../../components/market/market-overview';
 import { AdvancedFilters } from '../../components/filters/advanced-filters';
@@ -88,9 +87,6 @@ export default function DashboardClient() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-          <WalletConnector />
-        </div>
 
         <div className="dashboard-main">
           {/* Strategy Chart */}
