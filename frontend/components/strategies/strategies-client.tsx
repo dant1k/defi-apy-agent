@@ -1,15 +1,10 @@
 'use client';
 
 import { Suspense, useEffect, useState } from "react";
-import dynamic from "next/dynamic";
 import { StrategiesSkeleton } from "../home/home-skeleton";
 import { fetchChains, fetchProtocols, fetchTopTokens } from "../../lib/api";
 import type { TokenOption } from "../home/types";
-
-const StrategiesPanel = dynamic(() => import("../home/strategies-panel"), {
-  ssr: false,
-  suspense: true,
-});
+import StrategiesPanel from "../home/strategies-panel";
 
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/\/$/, "") ?? "http://localhost:8000";
@@ -63,14 +58,14 @@ export function StrategiesClient(): JSX.Element {
         </div>
 
         <div className="card-genora">
-          <Suspense fallback={<StrategiesSkeleton />}>
-            <StrategiesPanel
-              apiBaseUrl={API_BASE_URL}
-              chains={chains}
-              protocols={protocols}
-              tokens={tokenOptions.map(t => t.value)}
-            />
-          </Suspense>
+                 <Suspense fallback={<StrategiesSkeleton />}>
+                   <StrategiesPanel
+                     apiBaseUrl={API_BASE_URL}
+                     chains={chains}
+                     protocols={protocols}
+                     tokens={tokenOptions.map(t => t.value)}
+                   />
+                 </Suspense>
         </div>
       </div>
     </div>

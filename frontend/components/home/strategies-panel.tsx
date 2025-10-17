@@ -41,52 +41,50 @@ export default function StrategiesPanel({ apiBaseUrl, chains, protocols, tokens 
   const [error, setError] = useState<string | null>(null);
   const [selectedStrategy, setSelectedStrategy] = useState<AggregatedStrategy | null>(null);
   const [showAllStrategies, setShowAllStrategies] = useState<boolean>(false);
+  const [hasSearched, setHasSearched] = useState<boolean>(false);
   // удалён текстовый поиск по токену
 
-  useEffect(() => {
+  const handleSearch = async () => {
     const controller = new AbortController();
-    async function loadData() {
-      setIsLoading(true);
-      setError(null);
-      try {
-        const response = await fetchAggregatorStrategies(
-          apiBaseUrl,
-          {
-            chain: filters.chain === "all" ? null : filters.chain,
-            protocol: filters.protocol === "all" ? null : filters.protocol,
-            min_tvl: filters.minTvl ? Number(filters.minTvl) : null,
-            min_apy: filters.minApy ? Number(filters.minApy) : null,
-            sort: filters.sort,
-            limit: PAGE_LIMIT,
-          },
-          controller.signal,
-        );
-        const fetched = response.items;
+    setIsLoading(true);
+    setError(null);
+    setHasSearched(true);
+    
+    try {
+      const response = await fetchAggregatorStrategies(
+        apiBaseUrl,
+        {
+          chain: filters.chain === "all" ? null : filters.chain,
+          protocol: filters.protocol === "all" ? null : filters.protocol,
+          min_tvl: filters.minTvl ? Number(filters.minTvl) : null,
+          min_apy: filters.minApy ? Number(filters.minApy) : null,
+          sort: filters.sort,
+          limit: PAGE_LIMIT,
+        },
+        controller.signal,
+      );
+      const fetched = response.items;
+      
+      // Filter by TVL (minimum 100,000)
+      const filteredByTvl = fetched.filter((it) => (it.tvl_usd || 0) >= 100000);
+      
+      // Filter by token if specified
+      const filteredByToken = filters.token && filters.token !== "all"
+        ? filteredByTvl.filter((it) => (it.token_pair || "").toUpperCase().includes((filters.token || "").toUpperCase()))
+        : filteredByTvl;
         
-        // Filter by TVL (minimum 100,000)
-        const filteredByTvl = fetched.filter((it) => (it.tvl_usd || 0) >= 100000);
-        
-        // Filter by token if specified
-        const filteredByToken = filters.token && filters.token !== "all"
-          ? filteredByTvl.filter((it) => (it.token_pair || "").toUpperCase().includes((filters.token || "").toUpperCase()))
-          : filteredByTvl;
-          
-        setFetchState({ items: filteredByToken, total: filteredByToken.length, updatedAt: response.updated_at });
-      } catch (err) {
-        if (!controller.signal.aborted) {
-          const message = err instanceof Error ? err.message : "Не удалось загрузить данные";
-          setError(message);
-        }
-      } finally {
-        if (!controller.signal.aborted) {
-          setIsLoading(false);
-        }
+      setFetchState({ items: filteredByToken, total: filteredByToken.length, updatedAt: response.updated_at });
+    } catch (err) {
+      if (!controller.signal.aborted) {
+        const message = err instanceof Error ? err.message : "Не удалось загрузить данные";
+        setError(message);
+      }
+    } finally {
+      if (!controller.signal.aborted) {
+        setIsLoading(false);
       }
     }
-
-    loadData();
-    return () => controller.abort();
-  }, [apiBaseUrl, filters]);
+  };
 
   const handleSelectChange = (event: ChangeEvent<HTMLSelectElement>) => {
     const { name, value } = event.target;
@@ -139,7 +137,6 @@ export default function StrategiesPanel({ apiBaseUrl, chains, protocols, tokens 
   }
 
   const rows = fetchState.items;
-
 
   return (
     <div className="strategies-panel">
@@ -221,7 +218,20 @@ export default function StrategiesPanel({ apiBaseUrl, chains, protocols, tokens 
         </div>
       </section>
 
-      <section className="card-genora mb-8">
+      {/* Search Button */}
+      <div className="text-center mb-8">
+        <button
+          onClick={handleSearch}
+          disabled={isLoading}
+          className="button-genora text-lg px-8 py-3 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {isLoading ? "Поиск..." : "Найти стратегии"}
+        </button>
+      </div>
+
+      {/* Sorting Options and Results - Only show after search */}
+      {hasSearched && (
+        <section className="card-genora mb-8">
         <h3 className="font-orbitron text-xl font-bold text-[var(--neonAqua)] mb-6">
           Sorting Options
         </h3>
@@ -281,6 +291,7 @@ export default function StrategiesPanel({ apiBaseUrl, chains, protocols, tokens 
           ))}
         </div>
       </section>
+      )}
 
       {error && (
         <div className="card-genora mb-8 border-red-500/50 bg-red-500/10">
