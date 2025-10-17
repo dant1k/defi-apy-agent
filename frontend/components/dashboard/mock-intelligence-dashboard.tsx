@@ -1,6 +1,9 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { SimpleCharts } from '../charts/simple-charts';
+import { StrategySearch } from '../search/strategy-search';
 
 interface Strategy {
   id: string;
@@ -166,56 +169,181 @@ export default function MockIntelligenceDashboard() {
     <div className="min-h-screen bg-black text-white p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-cyan-400 to-fuchsia-500 bg-clip-text text-transparent mb-2">
+        <motion.div 
+          className="text-center mb-8"
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8 }}
+        >
+          <motion.h1 
+            className="text-4xl font-bold bg-gradient-to-r from-cyan-400 to-fuchsia-500 bg-clip-text text-transparent mb-2"
+            animate={{ 
+              backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"],
+            }}
+            transition={{ 
+              duration: 3,
+              repeat: Infinity,
+              ease: "linear"
+            }}
+            style={{
+              backgroundSize: "200% 200%"
+            }}
+          >
             🧠 Genora Intelligence Dashboard
-          </h1>
-          <p className="text-white/60">AI-powered DeFi analytics with real-time data</p>
-          <div className="mt-4">
-            <span className={`px-3 py-1 rounded-full text-sm ${
-              apiStatus === 'connected' ? 'bg-green-500/20 text-green-400' :
-              apiStatus === 'disconnected' ? 'bg-yellow-500/20 text-yellow-400' :
-              'bg-blue-500/20 text-blue-400'
-            }`}>
+          </motion.h1>
+          <motion.p 
+            className="text-white/60"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.3, duration: 0.6 }}
+          >
+            AI-powered DeFi analytics with real-time data
+          </motion.p>
+          <motion.div 
+            className="mt-4"
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.5, duration: 0.4 }}
+          >
+            <motion.span 
+              className={`px-3 py-1 rounded-full text-sm ${
+                apiStatus === 'connected' ? 'bg-green-500/20 text-green-400' :
+                apiStatus === 'disconnected' ? 'bg-yellow-500/20 text-yellow-400' :
+                'bg-blue-500/20 text-blue-400'
+              }`}
+              animate={apiStatus === 'connected' ? {
+                boxShadow: [
+                  "0 0 0 0 rgba(34, 197, 94, 0.4)",
+                  "0 0 0 10px rgba(34, 197, 94, 0)",
+                  "0 0 0 0 rgba(34, 197, 94, 0)"
+                ]
+              } : {}}
+              transition={{
+                duration: 2,
+                repeat: Infinity,
+                ease: "easeInOut"
+              }}
+            >
               {apiStatus === 'connected' ? '✅ Live Data' : 
                apiStatus === 'disconnected' ? '⚠️ Demo Mode' : 
                '🔄 Testing Connection'}
-            </span>
-          </div>
-        </div>
+            </motion.span>
+          </motion.div>
+        </motion.div>
+
+        {/* Search */}
+        <StrategySearch 
+          strategies={strategies} 
+          onStrategySelect={(strategy) => {
+            console.log('Selected strategy:', strategy);
+            // You can add more functionality here, like showing a modal or navigating to details
+          }}
+        />
 
         {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <div className="bg-gradient-to-b from-black/70 to-black/40 border border-cyan-900/50 rounded-lg p-6">
-            <div className="text-2xl font-bold text-cyan-400">{strategies.length}</div>
+        <motion.div 
+          className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, staggerChildren: 0.1 }}
+        >
+          <motion.div 
+            className="bg-gradient-to-b from-black/70 to-black/40 border border-cyan-900/50 rounded-lg p-6 hover:border-cyan-500/50 transition-colors"
+            whileHover={{ scale: 1.05 }}
+            transition={{ type: "spring", stiffness: 300 }}
+          >
+            <motion.div 
+              className="text-2xl font-bold text-cyan-400"
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
+            >
+              {strategies.length}
+            </motion.div>
             <div className="text-white/60">Total Strategies</div>
-          </div>
-          <div className="bg-gradient-to-b from-black/70 to-black/40 border border-cyan-900/50 rounded-lg p-6">
-            <div className="text-2xl font-bold text-fuchsia-400">
+          </motion.div>
+          <motion.div 
+            className="bg-gradient-to-b from-black/70 to-black/40 border border-cyan-900/50 rounded-lg p-6 hover:border-fuchsia-500/50 transition-colors"
+            whileHover={{ scale: 1.05 }}
+            transition={{ type: "spring", stiffness: 300 }}
+          >
+            <motion.div 
+              className="text-2xl font-bold text-fuchsia-400"
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ delay: 0.3, type: "spring", stiffness: 200 }}
+            >
               {formatTvl(strategies.reduce((sum, s) => sum + s.tvl_usd, 0))}
-            </div>
+            </motion.div>
             <div className="text-white/60">Total TVL</div>
-          </div>
-          <div className="bg-gradient-to-b from-black/70 to-black/40 border border-cyan-900/50 rounded-lg p-6">
-            <div className="text-2xl font-bold text-green-400">
+          </motion.div>
+          <motion.div 
+            className="bg-gradient-to-b from-black/70 to-black/40 border border-cyan-900/50 rounded-lg p-6 hover:border-green-500/50 transition-colors"
+            whileHover={{ scale: 1.05 }}
+            transition={{ type: "spring", stiffness: 300 }}
+          >
+            <motion.div 
+              className="text-2xl font-bold text-green-400"
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ delay: 0.4, type: "spring", stiffness: 200 }}
+            >
               {strategies.length > 0 ? (strategies.reduce((sum, s) => sum + s.apy, 0) / strategies.length).toFixed(2) : 0}%
-            </div>
+            </motion.div>
             <div className="text-white/60">Average APY</div>
-          </div>
-          <div className="bg-gradient-to-b from-black/70 to-black/40 border border-cyan-900/50 rounded-lg p-6">
-            <div className="text-2xl font-bold text-yellow-400">
+          </motion.div>
+          <motion.div 
+            className="bg-gradient-to-b from-black/70 to-black/40 border border-cyan-900/50 rounded-lg p-6 hover:border-yellow-500/50 transition-colors"
+            whileHover={{ scale: 1.05 }}
+            transition={{ type: "spring", stiffness: 300 }}
+          >
+            <motion.div 
+              className="text-2xl font-bold text-yellow-400"
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ delay: 0.5, type: "spring", stiffness: 200 }}
+            >
               {strategies.length > 0 ? (strategies.reduce((sum, s) => sum + s.ai_score, 0) / strategies.length).toFixed(0) : 0}
-            </div>
+            </motion.div>
             <div className="text-white/60">Avg AI Score</div>
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
 
         {/* Top Strategies */}
-        <div className="bg-gradient-to-b from-black/70 to-black/40 border border-cyan-900/50 rounded-lg p-6 mb-8">
+        <motion.div 
+          className="bg-gradient-to-b from-black/70 to-black/40 border border-cyan-900/50 rounded-lg p-6 mb-8"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.3 }}
+        >
           <h2 className="text-2xl font-bold text-cyan-400 mb-6">Top AI-Recommended Strategies</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {strategies.slice(0, 6).map((strategy) => (
-              <div key={strategy.id} className="bg-black/40 border border-fuchsia-900/50 rounded-lg p-4 hover:border-fuchsia-500/50 transition-colors">
+          <motion.div 
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.6, delay: 0.5 }}
+          >
+            <AnimatePresence>
+              {strategies.slice(0, 6).map((strategy, index) => (
+                <motion.div 
+                  key={strategy.id} 
+                  className="bg-black/40 border border-fuchsia-900/50 rounded-lg p-4 hover:border-fuchsia-500/50 transition-colors"
+                  initial={{ opacity: 0, y: 20, scale: 0.9 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -20, scale: 0.9 }}
+                  transition={{ 
+                    duration: 0.4, 
+                    delay: 0.6 + index * 0.1,
+                    type: "spring",
+                    stiffness: 200
+                  }}
+                  whileHover={{ 
+                    scale: 1.05,
+                    y: -5,
+                    transition: { duration: 0.2 }
+                  }}
+                  whileTap={{ scale: 0.95 }}
+                >
                 <div className="flex justify-between items-start mb-3">
                   <h3 className="text-lg font-semibold text-white">{strategy.protocol}</h3>
                   <span className={`px-2 py-1 rounded text-xs font-medium ${
@@ -248,13 +376,22 @@ export default function MockIntelligenceDashboard() {
                     {strategy.ai_comment}
                   </div>
                 )}
-              </div>
-            ))}
-          </div>
-        </div>
+                </motion.div>
+              ))}
+            </AnimatePresence>
+          </motion.div>
+        </motion.div>
+
+        {/* Interactive Charts */}
+        <SimpleCharts strategies={strategies} />
 
         {/* API Info */}
-        <div className="bg-gradient-to-b from-black/70 to-black/40 border border-cyan-900/50 rounded-lg p-6">
+        <motion.div 
+          className="bg-gradient-to-b from-black/70 to-black/40 border border-cyan-900/50 rounded-lg p-6"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.8 }}
+        >
           <h2 className="text-xl font-bold text-cyan-400 mb-4">System Status</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
             <div>
@@ -284,7 +421,7 @@ export default function MockIntelligenceDashboard() {
               </div>
             </div>
           )}
-        </div>
+        </motion.div>
       </div>
     </div>
   );

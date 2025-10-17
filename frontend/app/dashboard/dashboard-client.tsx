@@ -34,6 +34,20 @@ export default function DashboardClient() {
         const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
         console.log('Loading strategies from:', apiUrl);
         
+        // Try direct fetch first
+        try {
+          const response = await fetch(`${apiUrl}/strategies?limit=200&sort=ai_score_desc`);
+          if (response.ok) {
+            const data = await response.json();
+            console.log('Loaded strategies via direct fetch:', data.items?.length || 0);
+            setStrategies(data.items || []);
+            return;
+          }
+        } catch (directError) {
+          console.log('Direct fetch failed, trying API client:', directError);
+        }
+        
+        // Fallback to API client
         const response = await fetchAggregatorStrategies(
           apiUrl,
           {
@@ -45,7 +59,7 @@ export default function DashboardClient() {
             limit: 200,
           }
         );
-        console.log('Loaded strategies:', response.items.length);
+        console.log('Loaded strategies via API client:', response.items.length);
         setStrategies(response.items);
       } catch (error) {
         console.error('Failed to load strategies:', error);
