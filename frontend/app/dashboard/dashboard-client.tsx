@@ -13,6 +13,10 @@ import { GlobalSearch } from '../../components/search/global-search';
 import { MarketOverview } from '../../components/market/market-overview';
 import { AdvancedFilters } from '../../components/filters/advanced-filters';
 import { AISuggestions } from '../../components/ai/ai-suggestions';
+import { ProtocolAnalytics } from '../../components/analytics/protocol-analytics';
+import { TrendsAnalysis } from '../../components/analytics/trends-analysis';
+import { RiskAnalysis } from '../../components/analytics/risk-analysis';
+import { DataExport } from '../../components/analytics/data-export';
 import './dashboard.css';
 
 export default function DashboardClient() {
@@ -98,6 +102,16 @@ export default function DashboardClient() {
         <AdvancedFilters onFiltersChange={handleFiltersChange} />
 
         <AISuggestions strategies={strategies} />
+
+        {/* Advanced Analytics Section */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+          <TrendsAnalysis strategies={strategies} />
+          <RiskAnalysis strategies={strategies} />
+        </div>
+
+        <ProtocolAnalytics strategies={strategies} />
+
+        <DataExport strategies={strategies} />
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
           <div className="lg:col-span-2">
