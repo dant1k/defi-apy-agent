@@ -9,7 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from src.pool_index import start_preload_index
 
 from .cache import close_redis
-from .routers import aggregator, strategies
+from .routers import aggregator, strategies, mcp
 from .routers import cmc_cache
 
 
@@ -25,6 +25,7 @@ app.add_middleware(
 
 app.include_router(aggregator.router)
 app.include_router(strategies.router)
+app.include_router(mcp.router, prefix="/mcp", tags=["MCP"])
 app.include_router(cmc_cache.router)
 
 # Serve cached icons from API under /icons/... (tokens, chains)

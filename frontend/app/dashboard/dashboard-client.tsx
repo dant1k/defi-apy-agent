@@ -17,6 +17,7 @@ import { ProtocolAnalytics } from '../../components/analytics/protocol-analytics
 import { TrendsAnalysis } from '../../components/analytics/trends-analysis';
 import { RiskAnalysis } from '../../components/analytics/risk-analysis';
 import { DataExport } from '../../components/analytics/data-export';
+import { AdvancedCharts } from '../../components/charts/advanced-charts';
 import './dashboard.css';
 
 export default function DashboardClient() {
@@ -102,6 +103,9 @@ export default function DashboardClient() {
         <AdvancedFilters onFiltersChange={handleFiltersChange} />
 
         <AISuggestions strategies={strategies} />
+
+        {/* Advanced Charts Section */}
+        <AdvancedCharts strategies={strategies} />
 
         {/* Advanced Analytics Section */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
