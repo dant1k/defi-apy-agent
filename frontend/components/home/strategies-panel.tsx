@@ -474,6 +474,60 @@ function StrategyTable({
   getChainIconUrl: (name: string) => string;
   getTokenPairIcons: (pair: string) => { first: string; second: string } | null;
 }): JSX.Element {
+  const [sortField, setSortField] = useState<string | null>(null);
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
+
+  const handleSort = (field: string) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === 'desc' ? 'asc' : 'desc');
+    } else {
+      setSortField(field);
+      setSortDirection('desc');
+    }
+  };
+
+  const sortedStrategies = [...strategies].sort((a, b) => {
+    if (!sortField) return 0;
+
+    let aValue: number;
+    let bValue: number;
+
+    switch (sortField) {
+      case 'apy':
+        aValue = a.apy || 0;
+        bValue = b.apy || 0;
+        break;
+      case 'tvl':
+        aValue = a.tvl_usd || 0;
+        bValue = b.tvl_usd || 0;
+        break;
+      case 'tvl_growth':
+        aValue = a.tvl_growth_24h || 0;
+        bValue = b.tvl_growth_24h || 0;
+        break;
+      case 'risk':
+        aValue = a.risk_index || 0;
+        bValue = b.risk_index || 0;
+        break;
+      case 'ai_score':
+        aValue = a.ai_score || 0;
+        bValue = b.ai_score || 0;
+        break;
+      default:
+        return 0;
+    }
+
+    if (sortDirection === 'desc') {
+      return bValue - aValue;
+    } else {
+      return aValue - bValue;
+    }
+  });
+
+  const getSortIcon = (field: string) => {
+    if (sortField !== field) return '↕️';
+    return sortDirection === 'desc' ? '↓' : '↑';
+  };
   return (
     <div className="card-genora">
       <div className="flex justify-between items-center mb-6">
@@ -492,16 +546,56 @@ function StrategyTable({
               <th className="text-left py-3 px-4 font-orbitron text-sm font-semibold text-[var(--neonAqua)]">Pair</th>
               <th className="text-left py-3 px-4 font-orbitron text-sm font-semibold text-[var(--neonAqua)]">Protocol</th>
               <th className="text-left py-3 px-4 font-orbitron text-sm font-semibold text-[var(--neonAqua)]">Chain</th>
-              <th className="text-left py-3 px-4 font-orbitron text-sm font-semibold text-[var(--neonAqua)]">APY</th>
-              <th className="text-left py-3 px-4 font-orbitron text-sm font-semibold text-[var(--neonAqua)]">TVL</th>
-              <th className="text-left py-3 px-4 font-orbitron text-sm font-semibold text-[var(--neonAqua)]">TVL Growth 24h</th>
-              <th className="text-left py-3 px-4 font-orbitron text-sm font-semibold text-[var(--neonAqua)]">Risk</th>
-              <th className="text-left py-3 px-4 font-orbitron text-sm font-semibold text-[var(--neonAqua)]">AI Score</th>
+              <th 
+                className="text-left py-3 px-4 font-orbitron text-sm font-semibold text-[var(--neonAqua)] cursor-pointer hover:text-white transition-colors select-none"
+                onClick={() => handleSort('apy')}
+              >
+                <div className="flex items-center space-x-1">
+                  <span>APY</span>
+                  <span className="text-xs">{getSortIcon('apy')}</span>
+                </div>
+              </th>
+              <th 
+                className="text-left py-3 px-4 font-orbitron text-sm font-semibold text-[var(--neonAqua)] cursor-pointer hover:text-white transition-colors select-none"
+                onClick={() => handleSort('tvl')}
+              >
+                <div className="flex items-center space-x-1">
+                  <span>TVL</span>
+                  <span className="text-xs">{getSortIcon('tvl')}</span>
+                </div>
+              </th>
+              <th 
+                className="text-left py-3 px-4 font-orbitron text-sm font-semibold text-[var(--neonAqua)] cursor-pointer hover:text-white transition-colors select-none"
+                onClick={() => handleSort('tvl_growth')}
+              >
+                <div className="flex items-center space-x-1">
+                  <span>TVL Growth 24h</span>
+                  <span className="text-xs">{getSortIcon('tvl_growth')}</span>
+                </div>
+              </th>
+              <th 
+                className="text-left py-3 px-4 font-orbitron text-sm font-semibold text-[var(--neonAqua)] cursor-pointer hover:text-white transition-colors select-none"
+                onClick={() => handleSort('risk')}
+              >
+                <div className="flex items-center space-x-1">
+                  <span>Risk</span>
+                  <span className="text-xs">{getSortIcon('risk')}</span>
+                </div>
+              </th>
+              <th 
+                className="text-left py-3 px-4 font-orbitron text-sm font-semibold text-[var(--neonAqua)] cursor-pointer hover:text-white transition-colors select-none"
+                onClick={() => handleSort('ai_score')}
+              >
+                <div className="flex items-center space-x-1">
+                  <span>AI Score</span>
+                  <span className="text-xs">{getSortIcon('ai_score')}</span>
+                </div>
+              </th>
               <th className="text-left py-3 px-4 font-orbitron text-sm font-semibold text-[var(--neonAqua)]">Link</th>
           </tr>
         </thead>
         <tbody>
-          {strategies.map((strategy) => (
+          {sortedStrategies.map((strategy) => (
             <tr
               key={strategy.id}
               className="border-b border-white/5 hover:bg-white/5 cursor-pointer transition-colors"
