@@ -2,24 +2,54 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useState } from 'react';
 
 export function Navigation() {
   const pathname = usePathname();
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   return (
-    <div className="sidebar-genora">
+    <div className={`sidebar-genora ${sidebarCollapsed ? 'collapsed' : ''}`}>
       {/* Logo and App Name */}
       <div className="sidebar-header">
-        <div className="flex items-center space-x-3">
-          <div className="logo-icon-artemis">
-            <img 
-              src="/icon-lamp-transparent.png" 
-              alt="Genora Lamp" 
-              className="logo-image-artemis"
-            />
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-3">
+            <div className="logo-icon-artemis">
+              <img 
+                src="/icon-lamp-transparent.png" 
+                alt="Genora Lamp" 
+                className="logo-image-artemis"
+              />
+            </div>
+            <span className="app-name-artemis">Genora</span>
           </div>
-          <span className="app-name-artemis">Genora</span>
+          
+          {/* Sidebar Toggle Button - appears on hover when expanded */}
+          {!sidebarCollapsed && (
+            <button 
+              className="sidebar-collapse-btn"
+              onClick={() => setSidebarCollapsed(true)}
+              title="Collapse menu"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M15 18l-6-6 6-6"/>
+              </svg>
+            </button>
+          )}
         </div>
+        
+        {/* Expand Button - appears on hover when collapsed */}
+        {sidebarCollapsed && (
+          <button 
+            className="sidebar-expand-btn"
+            onClick={() => setSidebarCollapsed(false)}
+            title="Expand menu"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M9 18l6-6-6-6"/>
+            </svg>
+          </button>
+        )}
       </div>
 
       {/* Search Bar */}

@@ -115,11 +115,33 @@ h1, h2, h3, .font-orbitron {
   padding: 2rem 1.5rem;
   z-index: 50;
   overflow-y: auto;
+  transition: width 0.3s ease;
+}
+
+.sidebar-genora.collapsed {
+  width: 80px;
+  padding: 2rem 1rem;
+}
+
+.sidebar-genora.collapsed .app-name-artemis,
+.sidebar-genora.collapsed .search-container,
+.sidebar-genora.collapsed .nav-item span {
+  display: none;
+}
+
+.sidebar-genora.collapsed .sidebar-header .flex {
+  justify-content: center;
+}
+
+.sidebar-genora.collapsed .nav-item {
+  justify-content: center;
+  padding: 0.75rem;
 }
 
 .sidebar-header {
   margin-bottom: 2rem;
   padding: 0.5rem 0;
+  position: relative;
 }
 
 .sidebar-header .flex {
@@ -159,6 +181,72 @@ h1, h2, h3, .font-orbitron {
   color: var(--pureWhite);
   letter-spacing: 0.5px;
   line-height: 1;
+}
+
+.sidebar-collapse-btn {
+  position: absolute;
+  top: 50%;
+  right: -16px;
+  transform: translateY(-50%);
+  width: 32px;
+  height: 32px;
+  background: var(--graphiteGray);
+  border: 1px solid rgba(0,246,255,0.3);
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--neonAqua);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  opacity: 0;
+  visibility: hidden;
+  z-index: 10;
+}
+
+.sidebar-header:hover .sidebar-collapse-btn {
+  opacity: 1;
+  visibility: visible;
+}
+
+.sidebar-collapse-btn:hover {
+  background: rgba(0,246,255,0.1);
+  border-color: rgba(0,246,255,0.5);
+  color: var(--neonAqua);
+  transform: translateY(-50%) scale(1.05);
+}
+
+.sidebar-expand-btn {
+  position: absolute;
+  top: 50%;
+  right: -16px;
+  transform: translateY(-50%);
+  width: 32px;
+  height: 32px;
+  background: var(--graphiteGray);
+  border: 1px solid rgba(0,246,255,0.3);
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--neonAqua);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  opacity: 0;
+  visibility: hidden;
+  z-index: 10;
+}
+
+.sidebar-header:hover .sidebar-expand-btn {
+  opacity: 1;
+  visibility: visible;
+}
+
+.sidebar-expand-btn:hover {
+  background: rgba(0,246,255,0.1);
+  border-color: rgba(0,246,255,0.5);
+  color: var(--neonAqua);
+  transform: translateY(-50%) scale(1.05);
 }
 
 .search-container {
