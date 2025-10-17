@@ -1181,14 +1181,34 @@ button {
   padding: 8px 12px;
 }
 
-.filter-group--sort {
-  grid-column: span 2;
-}
-
 .sort-buttons {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+}
+
+.strategies-sorting {
+  display: flex;
+  justify-content: center;
+  margin: 16px 0;
+  padding: 16px;
+  background: rgba(23, 32, 60, 0.4);
+  border-radius: 16px;
+  border: 1px solid rgba(111, 165, 255, 0.08);
+}
+
+.sort-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  color: #d1dcff;
+  font-size: 0.9rem;
+}
+
+.sort-group span {
+  font-weight: 600;
+  color: #b8c7ff;
 }
 
 .sort-option {

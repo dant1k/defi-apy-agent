@@ -27,8 +27,8 @@ const DEFAULT_FILTERS: FiltersState = {
   chain: "all",
   protocol: "all",
   token: "all",
-  minTvl: 1_000_000,
-  minApy: 0,
+  minTvl: "",
+  minApy: "",
   sort: "ai_score_desc",
 };
 
@@ -53,8 +53,8 @@ export default function StrategiesPanel({ apiBaseUrl, chains, protocols, tokens 
           {
             chain: filters.chain === "all" ? null : filters.chain,
             protocol: filters.protocol === "all" ? null : filters.protocol,
-            min_tvl: filters.minTvl || null,
-            min_apy: filters.minApy || null,
+            min_tvl: filters.minTvl ? Number(filters.minTvl) : null,
+            min_apy: filters.minApy ? Number(filters.minApy) : null,
             sort: filters.sort,
             limit: PAGE_LIMIT,
           },
@@ -88,8 +88,7 @@ export default function StrategiesPanel({ apiBaseUrl, chains, protocols, tokens 
 
   const handleNumberChange = (event: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = event.target;
-    const numeric = Number(value);
-    setFilters((prev) => ({ ...prev, [name]: Number.isNaN(numeric) ? prev[name as keyof FiltersState] : numeric }));
+    setFilters((prev) => ({ ...prev, [name]: value }));
   };
 
   const sortOptions: Array<{ value: FiltersState["sort"]; label: string }> = useMemo(
@@ -214,7 +213,10 @@ export default function StrategiesPanel({ apiBaseUrl, chains, protocols, tokens 
           />
         </div>
 
-        <div className="filter-group filter-group--sort">
+      </section>
+
+      <section className="strategies-sorting">
+        <div className="sort-group">
           <span>Сортировка</span>
           <div className="sort-buttons">
             {sortOptions.map((option) => (
