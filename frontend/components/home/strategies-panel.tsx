@@ -1,7 +1,10 @@
 "use client";
 
+"use client";
+
 import { ChangeEvent, useEffect, useMemo, useState, useRef } from "react";
 import dynamic from "next/dynamic";
+import Link from "next/link";
 import type { AggregatedStrategy, FiltersState } from "./types";
 import { formatLabel, formatNumber, formatPercent } from "./formatters";
 import { fetchAggregatorStrategies } from "../../lib/api";
@@ -328,8 +331,10 @@ export default function StrategiesPanel({ apiBaseUrl, chains, protocols, tokens 
               <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
                 {/* Main Strategy Card */}
                 <div className="lg:col-span-2">
-                  <div className="card-genora shadow-glow cursor-pointer hover:scale-105 transition-transform h-full flex flex-col"
-                       onClick={() => setSelectedStrategy(rows[0])}>
+                  <div className="card-genora border-2 border-[var(--neonAqua)]/50 shadow-glow h-full flex flex-col">
+                    <div className="mb-4">
+                      <span className="text-xs text-[var(--neonAqua)] uppercase">Featured Strategy</span>
+                    </div>
                     <div className="flex items-center space-x-4 mb-4">
                       {(() => {
                         const pair = rows[0].token_pair || rows[0].name;
@@ -342,39 +347,47 @@ export default function StrategiesPanel({ apiBaseUrl, chains, protocols, tokens 
                         ) : null;
                       })()}
                       <div>
-                        <h4 className="font-orbitron text-lg font-bold text-white">
+                        <h4 className="font-orbitron text-2xl font-bold text-white">
                           {rows[0].token_pair || rows[0].name}
                         </h4>
-                        <p className="font-inter text-sm text-white/60">
+                        <p className="font-inter text-sm text-white/70">
                           {formatLabel(rows[0].protocol)} • {formatLabel(rows[0].chain)}
                         </p>
                       </div>
                     </div>
-                    <div className="grid grid-cols-2 gap-4 flex-grow">
+                    <div className="grid grid-cols-2 gap-4 flex-grow mb-4">
                       <div>
-                        <p className="font-spacemono text-xs text-white/60">APY</p>
-                        <p className="font-spacemono text-xl font-bold text-[var(--profitGreen)]">
+                        <p className="font-spacemono text-xs text-white/70 mb-1">APY</p>
+                        <p className="font-spacemono text-2xl font-bold text-[var(--profitGreen)]">
                           {formatPercent(rows[0].apy)}
                         </p>
                       </div>
                       <div>
-                        <p className="font-spacemono text-xs text-white/60">TVL</p>
-                        <p className="font-spacemono text-lg font-semibold text-white">
+                        <p className="font-spacemono text-xs text-white/70 mb-1">TVL</p>
+                        <p className="font-spacemono text-xl font-semibold text-white">
                           {formatNumber(rows[0].tvl_usd, 2)} $
                         </p>
                       </div>
                       <div>
-                        <p className="font-spacemono text-xs text-white/60">Risk</p>
-                        <p className="font-spacemono text-sm text-white">
-                          {rows[0].risk_index?.toFixed(2) || "—"}
+                        <p className="font-spacemono text-xs text-white/70 mb-1">Volume (24h)</p>
+                        <p className="font-spacemono text-lg font-medium text-white">
+                          ${((rows[0].volume_24h || rows[0].tvl_usd * 0.2) || 0).toLocaleString(undefined, { maximumFractionDigits: 0 })}
                         </p>
                       </div>
                       <div>
-                        <p className="font-spacemono text-xs text-white/60">AI Score</p>
-                        <p className="font-spacemono text-sm font-bold text-[var(--neonAqua)]">
-                          {rows[0].ai_score?.toFixed(2) || "—"}
+                        <p className="font-spacemono text-xs text-white/70 mb-1">Fees (24h)</p>
+                        <p className="font-spacemono text-lg font-medium text-white">
+                          ${((rows[0].fees_24h || rows[0].tvl_usd * 0.002) || 0).toLocaleString(undefined, { maximumFractionDigits: 0 })}
                         </p>
                       </div>
+                    </div>
+                    <div className="mt-auto">
+                      <Link
+                        href={`/strategies/${rows[0].id}`}
+                        className="inline-block px-6 py-3 bg-gradient-to-r from-[var(--neonAqua)] to-purple-500 text-black font-semibold rounded-lg hover:opacity-90 transition-opacity text-center w-full"
+                      >
+                        View Details →
+                      </Link>
                     </div>
                   </div>
                 </div>

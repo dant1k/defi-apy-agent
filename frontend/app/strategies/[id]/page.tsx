@@ -25,24 +25,35 @@ export default function StrategyDetailsPage() {
   const [metric, setMetric] = useState<Metric>("tvl");
   const [timeframe, setTimeframe] = useState<"24h" | "7d" | "30d" | "all">("7d");
 
-  const API_BASE_URL =
-    process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/\/$/, "") ?? "http://localhost:8000";
-
   useEffect(() => {
     if (!strategyId) return;
 
     setLoading(true);
-    fetchStrategyDetails(API_BASE_URL, strategyId)
+    const apiBaseUrl =
+      process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/\/$/, "") ||
+      process.env.NEXT_PUBLIC_API_URL ||
+      "http://localhost:8000";
+    
+    console.log("[StrategyDetails] Fetching strategy:", strategyId);
+    console.log("[StrategyDetails] API Base URL:", apiBaseUrl);
+    
+    fetchStrategyDetails(apiBaseUrl, strategyId)
       .then((data) => {
-        if (data) {
+        console.log("[StrategyDetails] Received data:", data);
+        if (data && data.strategy) {
           setStrategyDetail(data);
+        } else {
+          console.warn("[StrategyDetails] Invalid data format:", data);
+          setStrategyDetail(null);
         }
       })
       .catch((err) => {
-        console.error("Failed to fetch strategy:", err);
+        console.error("[StrategyDetails] Failed to fetch strategy:", err);
+        console.error("[StrategyDetails] Error details:", err.message);
+        setStrategyDetail(null);
       })
       .finally(() => setLoading(false));
-  }, [strategyId, API_BASE_URL]);
+  }, [strategyId]);
 
   // Генерируем исторические данные для графика
   const generateHistoricalData = () => {
@@ -105,6 +116,8 @@ export default function StrategyDetailsPage() {
   // Расчет баланса (упрощенный, на основе TVL)
   const token0Balance = strategy.tvl_usd * 0.6; // Примерное распределение
   const token1Balance = strategy.tvl_usd * 0.4;
+  const tokenPair = strategy.token_pair || strategy.name;
+  const tokens = tokenPair.split("-");
 
   return (
     <div className="min-h-screen bg-[var(--darkVoid)]">
@@ -118,7 +131,7 @@ export default function StrategyDetailsPage() {
             ← Back to Strategies
           </button>
           <h1 className="font-orbitron text-4xl font-bold text-[var(--neonAqua)] mb-2">
-            {strategy.token_pair || strategy.name}
+            {tokenPair} Strategy
           </h1>
           <p className="text-white/70">{strategy.protocol} • {strategy.chain}</p>
         </div>
@@ -227,6 +240,21 @@ export default function StrategyDetailsPage() {
               </h2>
               <div className="space-y-3">
                 <div>
+                  <div className="text-xs text-white/70 mb-1">Strategy Address</div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-white font-mono">
+                      {strategy.id.slice(0, 6)}...{strategy.id.slice(-4)}
+                    </span>
+                    <button
+                      onClick={() => navigator.clipboard.writeText(strategy.id)}
+                      className="text-white/70 hover:text-white"
+                      title="Copy address"
+                    >
+                      📋
+                    </button>
+                  </div>
+                </div>
+                <div>
                   <div className="text-xs text-white/70 mb-1">Protocol</div>
                   <div className="text-sm text-white">{strategy.protocol}</div>
                 </div>
@@ -234,26 +262,11 @@ export default function StrategyDetailsPage() {
                   <div className="text-xs text-white/70 mb-1">Chain</div>
                   <div className="text-sm text-white">{strategy.chain}</div>
                 </div>
-                <div>
-                  <div className="text-xs text-white/70 mb-1">Strategy ID</div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm text-white font-mono">
-                      {strategy.id.slice(0, 20)}...
-                    </span>
-                    <button
-                      onClick={() => navigator.clipboard.writeText(strategy.id)}
-                      className="text-white/70 hover:text-white"
-                      title="Copy ID"
-                    >
-                      📋
-                    </button>
-                  </div>
-                </div>
               </div>
             </div>
 
             {/* Current Balance */}
-            {strategy.token_pair && (
+            {strategy.token_pair && tokens.length >= 2 && (
               <div className="card-genora">
                 <h2 className="font-orbitron text-lg font-bold text-[var(--neonAqua)] mb-4">
                   Current Balance
@@ -263,9 +276,9 @@ export default function StrategyDetailsPage() {
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-2">
                         <div className="w-6 h-6 rounded-full bg-blue-500 flex items-center justify-center text-xs text-white">
-                          {strategy.token_pair.split("-")[0]?.[0] || "T"}
+                          {tokens[0]?.[0] || "T"}
                         </div>
-                        <span className="text-sm text-white">{strategy.token_pair.split("-")[0] || "Token0"}</span>
+                        <span className="text-sm text-white">{tokens[0] || "Token0"}</span>
                       </div>
                       <div className="text-right">
                         <div className="text-sm text-white font-medium">
@@ -281,9 +294,9 @@ export default function StrategyDetailsPage() {
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-2">
                         <div className="w-6 h-6 rounded-full bg-green-500 flex items-center justify-center text-xs text-white">
-                          {strategy.token_pair.split("-")[1]?.[0] || "T"}
+                          {tokens[1]?.[0] || "T"}
                         </div>
-                        <span className="text-sm text-white">{strategy.token_pair.split("-")[1] || "Token1"}</span>
+                        <span className="text-sm text-white">{tokens[1] || "Token1"}</span>
                       </div>
                       <div className="text-right">
                         <div className="text-sm text-white font-medium">
@@ -323,9 +336,15 @@ export default function StrategyDetailsPage() {
                   <span className="text-sm text-white">{strategy.apy?.toFixed(2) || "0.00"}%</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-sm text-white/70">TVL</span>
+                  <span className="text-sm text-white/70">Total Volume (All)</span>
                   <span className="text-sm text-white">
-                    ${strategy.tvl_usd?.toLocaleString(undefined, { maximumFractionDigits: 0 }) || "0"}
+                    ${((strategy.volume_24h || 0) * 30).toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm text-white/70">Total Fees (All)</span>
+                  <span className="text-sm text-white">
+                    ${((strategy.fees_24h || 0) * 30).toLocaleString(undefined, { maximumFractionDigits: 0 })}
                   </span>
                 </div>
                 <div className="flex justify-between">
@@ -356,4 +375,3 @@ export default function StrategyDetailsPage() {
     </div>
   );
 }
-
