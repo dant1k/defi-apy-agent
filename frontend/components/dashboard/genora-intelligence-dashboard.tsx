@@ -123,7 +123,8 @@ export default function GenoraIntelligenceDashboard() {
   }, []);
 
   const playHoverResonance = () => {
-    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+    const ctx = new AudioContextClass();
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
     osc.type = 'sine';
