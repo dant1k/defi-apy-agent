@@ -35,7 +35,7 @@ export function TrendsAnalysis({ strategies }: TrendsAnalysisProps) {
       return acc;
     }, {} as Record<string, number>);
     
-    const topChain = Object.entries(chainGroups).sort(([,a], [,b]) => b - a)[0]?.[0] || 'Unknown';
+    const topChain = Object.entries(chainGroups).sort(([,a], [,b]) => (b as number) - (a as number))[0]?.[0] || 'Unknown';
     const topChainTvl = chainGroups[topChain] || 0;
 
     // Mock previous data (in real app, this would come from historical data)
