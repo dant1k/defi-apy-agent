@@ -205,7 +205,7 @@ export default function StrategiesPanel({ apiBaseUrl, chains, protocols, tokens 
               Токен
             </label>
             <SearchableSelect
-              value={filters.token}
+              value={filters.token || "all"}
               onChange={(value) => setFilters(prev => ({ ...prev, token: value }))}
               options={[
                 { value: "all", label: "Все токены", icon: null },
