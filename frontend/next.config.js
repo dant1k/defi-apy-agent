@@ -7,6 +7,7 @@ const nextConfig = {
   },
   reactStrictMode: true,
   poweredByHeader: false,
+  output: 'standalone', // Для Docker деплоя
   webpack: (config) => {
     config.resolve.alias = {
       ...config.resolve.alias,
