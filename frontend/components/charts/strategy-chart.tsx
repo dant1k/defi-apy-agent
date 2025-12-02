@@ -185,15 +185,24 @@ export function StrategyChart({ strategyId, strategyName, type }: StrategyChartP
         <div className="stat">
           <span className="stat-label">Current {type.toUpperCase()}</span>
           <span className="stat-value">
-            {formatValue(data[data.length - 1]?.[type] || 0, type)}
+            {type === 'both' 
+              ? `${formatValue(data[data.length - 1]?.apy || 0, 'apy')} / ${formatValue(data[data.length - 1]?.tvl || 0, 'tvl')}`
+              : formatValue((data[data.length - 1]?.[type as 'apy' | 'tvl'] || 0) as number, type)
+            }
           </span>
         </div>
         <div className="stat">
           <span className="stat-label">24h Change</span>
-          <span className={`stat-change ${data[data.length - 1]?.[type] > data[0]?.[type] ? 'positive' : 'negative'}`}>
+          <span className={`stat-change ${
+            type === 'both' 
+              ? (data[data.length - 1]?.apy || 0) > (data[0]?.apy || 0) ? 'positive' : 'negative'
+              : (data[data.length - 1]?.[type as 'apy' | 'tvl'] || 0) > (data[0]?.[type as 'apy' | 'tvl'] || 0) ? 'positive' : 'negative'
+          }`}>
             {data.length > 1 ? 
-              `${((data[data.length - 1][type] - data[0][type]) / data[0][type] * 100).toFixed(2)}%` : 
-              '0%'
+              type === 'both'
+                ? `${((data[data.length - 1].apy - data[0].apy) / data[0].apy * 100).toFixed(2)}%`
+                : `${(((data[data.length - 1][type as 'apy' | 'tvl'] as number) - (data[0][type as 'apy' | 'tvl'] as number)) / (data[0][type as 'apy' | 'tvl'] as number) * 100).toFixed(2)}%`
+              : '0%'
             }
           </span>
         </div>
