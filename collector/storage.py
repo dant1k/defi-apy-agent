@@ -69,15 +69,21 @@ class StrategyStorage:
         if protocols:
             self.redis.delete(PROTOCOL_SET_KEY)
             self.redis.sadd(PROTOCOL_SET_KEY, *protocols)
+            # Устанавливаем TTL для sets, чтобы они не исчезали
+            self.redis.expire(PROTOCOL_SET_KEY, LATEST_TTL_SECONDS)
         if chains:
             self.redis.delete(CHAIN_SET_KEY)
             self.redis.sadd(CHAIN_SET_KEY, *chains)
+            # Устанавливаем TTL для sets, чтобы они не исчезали
+            self.redis.expire(CHAIN_SET_KEY, LATEST_TTL_SECONDS)
 
         self.redis.delete(STRATEGY_ITEM_HASH)
         if strategies:
             with self.redis.pipeline() as pipe:
                 for item in strategies:
                     pipe.hset(STRATEGY_ITEM_HASH, item["id"], json.dumps(item))
+                # Устанавливаем TTL для hash, чтобы данные не исчезали
+                pipe.expire(STRATEGY_ITEM_HASH, LATEST_TTL_SECONDS)
                 pipe.execute()
 
     def get_top_by_score(self, strategies: Iterable[Dict], limit: int = 10) -> List[Dict]:
