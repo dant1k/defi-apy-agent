@@ -52,8 +52,8 @@ export function MarketOverview({ strategies }: MarketOverviewProps) {
       return acc;
     }, {} as Record<string, number>);
 
-    const topProtocol = Object.entries(protocolTvl).sort(([,a], [,b]) => b - a)[0]?.[0] || 'N/A';
-    const topChain = Object.entries(chainTvl).sort(([,a], [,b]) => b - a)[0]?.[0] || 'N/A';
+    const topProtocol = Object.entries(protocolTvl).sort(([,a], [,b]) => (b as number) - (a as number))[0]?.[0] || 'N/A';
+    const topChain = Object.entries(chainTvl).sort(([,a], [,b]) => (b as number) - (a as number))[0]?.[0] || 'N/A';
 
     setMarketData({
       totalTvl,
