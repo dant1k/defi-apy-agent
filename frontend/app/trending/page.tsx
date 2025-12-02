@@ -25,7 +25,8 @@ export default function TrendingPage() {
 
   const loadData = async () => {
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/strategies`)
+      const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/\/$/, "") || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+      const res = await fetch(`${apiUrl}/strategies`)
       const data = await res.json()
       const items = Array.isArray(data?.items) ? data.items : []
       setStrategies(items.filter((s: any) => s.tvl_growth_24h > 10))

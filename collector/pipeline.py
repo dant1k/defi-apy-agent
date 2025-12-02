@@ -141,3 +141,29 @@ def collect_and_store() -> Dict[str, int]:
         return {"raw_records": total_raw, "strategies": len(strategies)}
     finally:
         storage.close()
+
+
+def collect_and_store_aptos_dex() -> Dict[str, int]:
+    """Собрать и сохранить данные Aptos DEX в Redis."""
+    from collector.aptos_dex_sources import fetch_aptos_dexes
+    from src.aptos_dex.schemas import DexSummary, PoolSummary
+    from src.aptos_dex.service import save_aptos_dexes_to_storage, save_aptos_pools_to_storage
+
+    try:
+        data = fetch_aptos_dexes()
+        dexes_data = data.get("dexes", [])
+        pools_data = data.get("pools", [])
+
+        # Валидация и преобразование в схемы
+        dexes = [DexSummary(**dex) for dex in dexes_data]
+        pools = [PoolSummary(**pool) for pool in pools_data]
+
+        # Сохранение в Redis
+        save_aptos_dexes_to_storage(dexes)
+        save_aptos_pools_to_storage(pools)
+
+        logger.info("Stored %s Aptos DEXes and %s pools", len(dexes), len(pools))
+        return {"dexes": len(dexes), "pools": len(pools)}
+    except Exception as exc:
+        logger.error("Failed to collect Aptos DEX data: %s", exc)
+        return {"dexes": 0, "pools": 0}

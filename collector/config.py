@@ -35,4 +35,6 @@ CHAIN_SET_KEY: Final[str] = "strategies:chains"
 
 # Timeouts
 HTTP_TIMEOUT_SECONDS: Final[int] = int(os.getenv("COLLECTOR_HTTP_TIMEOUT", "30"))
-LATEST_TTL_SECONDS: Final[int] = int(os.getenv("STRATEGIES_CACHE_TTL", str(60 * 30)))  # 30 minutes
+# TTL увеличен до 7 дней, чтобы данные не исчезали
+# Worker будет обновлять данные каждые 2 минуты и продлевать TTL
+LATEST_TTL_SECONDS: Final[int] = int(os.getenv("STRATEGIES_CACHE_TTL", str(60 * 60 * 24 * 7)))  # 7 days

@@ -1,0 +1,48 @@
+# Команды для выполнения на сервере 46.224.99.147
+
+# Вариант 1: Клонировать репозиторий заново (РЕКОМЕНДУЕТСЯ)
+cd /opt
+rm -rf defi-apy-agent
+git clone https://github.com/dant1k/defi-apy-agent.git
+cd defi-apy-agent
+git checkout feature/dashboard-redesign
+cp .env.example .env
+# Отредактируй .env и укажи NEXT_PUBLIC_API_URL=http://46.224.99.147:8000
+docker compose -f docker-compose.prod.yml up -d --build
+
+# Вариант 2: Исправить файл вручную
+cd /opt/defi-apy-agent
+nano frontend/app/intelligence/page.tsx
+
+# Найди строку 148 и замени весь блок (строки 133-151):
+# БЫЛО:
+#         {showExplainer && selectedStrategy && (
+#           <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
+#             <div className="card-genora max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+#               <div className="flex justify-between items-center mb-4">
+#                 <h2 className="font-orbitron text-xl font-bold text-[var(--neonAqua)]">
+#                   Strategy Explanation
+#                 </h2>
+#                 <button
+#                   onClick={() => setShowExplainer(false)}
+#                   className="text-white/70 hover:text-white"
+#                 >
+#                   ✕
+#                 </button>
+#               </div>
+#               <StrategyExplainer strategy={selectedStrategy} />
+#             </div>
+#           </div>
+#         )}
+
+# СТАЛО:
+#         {selectedStrategy && (
+#           <StrategyExplainer 
+#             strategy={selectedStrategy} 
+#             isOpen={showExplainer}
+#             onClose={() => setShowExplainer(false)}
+#           />
+#         )}
+
+# После исправления:
+docker compose -f docker-compose.prod.yml up -d --build frontend
