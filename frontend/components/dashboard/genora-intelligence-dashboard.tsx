@@ -146,7 +146,7 @@ export default function GenoraIntelligenceDashboard() {
   const plasmaStream = {
     initial: { x: "-10%", opacity: 0 },
     animate: { x: ["-10%", "110%"], opacity: [0.3, 0.8, 0.3] },
-    transition: { duration: 8, repeat: Infinity, ease: "linear" }
+    transition: { duration: 8, repeat: Infinity, ease: "linear" as const }
   };
 
   // 3D parallax grid background
