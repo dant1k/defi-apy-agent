@@ -45,3 +45,9 @@ export type StrategyDetail = {
   strategy: AggregatedStrategy;
   history: TvlPoint[];
 };
+
+export type TokenOption = {
+  value: string;
+  label: string;
+  slug?: string;
+};
