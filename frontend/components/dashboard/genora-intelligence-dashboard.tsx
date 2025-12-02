@@ -83,7 +83,7 @@ export default function GenoraIntelligenceDashboard() {
   const [marketInsights, setMarketInsights] = useState<MarketInsights | null>(null);
   const [selectedTimeframe, setSelectedTimeframe] = useState('24h');
   const [chartType, setChartType] = useState<'line' | 'area' | 'bar'>('line');
-  const audioRef = useRef(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
     const loadData = async () => {
