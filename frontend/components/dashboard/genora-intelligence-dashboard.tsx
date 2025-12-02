@@ -156,7 +156,7 @@ export default function GenoraIntelligenceDashboard() {
   const rotateY = useTransform(mouseX, [0, 1], [-10, 10]);
 
   useEffect(() => {
-    const handleMouseMove = (e) => {
+    const handleMouseMove = (e: MouseEvent) => {
       mouseX.set(e.clientX / window.innerWidth);
       mouseY.set(e.clientY / window.innerHeight);
     };
