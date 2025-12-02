@@ -3,9 +3,11 @@
 from __future__ import annotations
 
 import asyncio
+from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Path, Query
+from fastapi.responses import JSONResponse
 
 from collector.pipeline import collect_and_store
 
@@ -14,6 +16,47 @@ from ..dependencies import get_strategy_cache
 
 
 router = APIRouter()
+
+
+@router.post("/refresh")
+async def refresh_data() -> JSONResponse:
+    """Принудительно обновить все данные."""
+    try:
+        stats = await asyncio.to_thread(collect_and_store)
+        return JSONResponse({
+            "success": True,
+            "message": "Data refreshed successfully",
+            "stats": stats,
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        })
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"Failed to refresh data: {str(exc)}")
+
+
+@router.get("/status")
+async def get_data_status(cache: StrategyCache = Depends(get_strategy_cache)) -> JSONResponse:
+    """Получить статус данных и время последнего обновления."""
+    snapshot = await cache.get_latest_strategies()
+    if not snapshot:
+        return JSONResponse({
+            "status": "no_data",
+            "message": "No data available",
+            "last_update": None,
+            "count": 0
+        })
+    
+    return JSONResponse({
+        "status": "active",
+        "message": "Data is available",
+        "last_update": snapshot.get("updated_at"),
+        "count": snapshot.get("count", 0),
+        "sources": {
+            "defillama": "active",
+            "beefy": "active", 
+            "yearn": "active",
+            "coingecko": "active"
+        }
+    })
 
 
 def _parse_csv(value: Optional[str]) -> Optional[List[str]]:

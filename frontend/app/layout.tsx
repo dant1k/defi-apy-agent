@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { Inter } from "next/font/google";
+import { Navigation } from "../components/navigation";
 
 const inter = Inter({
   subsets: ["latin", "cyrillic"],
@@ -12,25 +13,18 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: {
-    default: "DeFi APY Agent",
-    template: "%s · DeFi APY Agent",
+    default: "Genora - AI DeFi Aggregator",
+    template: "%s · Genora",
   },
-  description: "Подбор DeFi-стратегий и аналитика доходности с минимальной задержкой.",
+  description: "AI-powered DeFi analytics and yield optimization platform with advanced market insights, risk analysis, and smart strategy recommendations.",
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="ru">
       <body className={inter.className}>
-        <div className="app-shell">
-          <header>
-            <h1>
-              <Link href="/" prefetch>
-                DeFi APY Agent
-              </Link>
-            </h1>
-            <p>Найди лучшие стратегии доходности в пару кликов</p>
-          </header>
+        <Navigation />
+        <div className="main-content-with-sidebar">
           <main>{children}</main>
           <footer>
             <span>Данные поставляет DeFiLlama • Осторожно оценивайте риски</span>

@@ -15,6 +15,8 @@ export type AggregatedStrategy = {
   icon_url?: string | null;
   source?: string | null;
   updated_at?: string | null;
+  volume_24h?: number | null;
+  fees_24h?: number | null;
 };
 
 export type StrategiesResponse = {
@@ -29,8 +31,8 @@ export type FiltersState = {
   chain: string;
   protocol: string;
   token?: string;
-  minTvl: number;
-  minApy: number;
+  minTvl: string | number;
+  minApy: string | number;
   sort: "ai_score_desc" | "apy_desc" | "tvl_desc" | "tvl_growth_desc";
 };
 
@@ -42,4 +44,10 @@ export type TvlPoint = {
 export type StrategyDetail = {
   strategy: AggregatedStrategy;
   history: TvlPoint[];
+};
+
+export type TokenOption = {
+  value: string;
+  label: string;
+  slug?: string;
 };

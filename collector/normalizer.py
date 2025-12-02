@@ -45,6 +45,29 @@ def _lookup_protocol_icon(protocol: str | None) -> str:
     return icon
 
 
+def _lookup_protocol_url(protocol: str | None) -> str | None:
+    """Get protocol website URL from DeFiLlama metadata."""
+    if not protocol:
+        return None
+    meta = _ensure_protocol_meta()
+    slug_candidates = {protocol.strip().lower()}
+    
+    for slug in slug_candidates:
+        data = meta.get(slug)
+        if not data:
+            continue
+        
+        # Try to get website URL from various possible fields
+        url = data.get("url") or data.get("website") or data.get("homepage")
+        if url:
+            # Ensure URL has protocol
+            if not url.startswith(('http://', 'https://')):
+                url = f"https://{url}"
+            return url
+        break
+    return None
+
+
 def normalize_defillama_pool(item: Dict) -> Optional[Dict]:
     pool_id = item.get("pool")
     if not pool_id:
@@ -56,6 +79,11 @@ def normalize_defillama_pool(item: Dict) -> Optional[Dict]:
 
     protocol = (item.get("project") or "").strip()
     chain = (item.get("chain") or "").strip()
+
+    # Try to get protocol website URL, fallback to DeFiLlama if not available
+    protocol_url = _lookup_protocol_url(protocol)
+    if not protocol_url:
+        protocol_url = f"https://defillama.com/yields/pool/{pool_id}"
 
     return {
         "id": f"defillama:{pool_id}",
@@ -70,7 +98,7 @@ def normalize_defillama_pool(item: Dict) -> Optional[Dict]:
         "ai_score": None,
         "ai_comment": None,
         "token_pair": tokens,
-        "url": f"https://defillama.com/yields/pool/{pool_id}",
+        "url": protocol_url,
         "icon_url": _lookup_protocol_icon(protocol),
         "updated_at": datetime.now(timezone.utc).isoformat(),
         "metadata": {

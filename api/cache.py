@@ -240,6 +240,7 @@ class StrategyCache:
         return history
 
 
+
 _redis_instance: Optional[Redis] = None
 
 
