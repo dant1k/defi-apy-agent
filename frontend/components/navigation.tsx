@@ -98,16 +98,6 @@ export function Navigation() {
           <span>AI Intelligence</span>
         </Link>
 
-        <Link 
-          href="/dashboard/aptos" 
-          className={`nav-item ${pathname === '/dashboard/aptos' ? 'nav-item-active' : ''}`}
-        >
-          <svg className="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M12 2L2 7l10 5 10-5-10-5z"/>
-            <path d="M2 17l10 5 10-5M2 12l10 5 10-5"/>
-          </svg>
-          <span>Aptos DEX</span>
-        </Link>
 
         <Link 
           href="/pools" 
