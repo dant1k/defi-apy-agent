@@ -15,7 +15,7 @@ interface RiskAnalysisProps {
 
 export function RiskAnalysis({ strategies }: RiskAnalysisProps) {
   const [riskMetrics, setRiskMetrics] = useState<RiskMetrics>({ low: 0, medium: 0, high: 0, total: 0 });
-  const [riskDistribution, setRiskDistribution] = useState<{ risk: string; count: number; percentage: number; tvl: number }[]>([]);
+  const [riskDistribution, setRiskDistribution] = useState<{ risk: string; count: number; percentage: number; tvl: number; color: string; bgColor: string }[]>([]);
   const [selectedRisk, setSelectedRisk] = useState<string | null>(null);
 
   useEffect(() => {
