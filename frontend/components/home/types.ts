@@ -15,6 +15,8 @@ export type AggregatedStrategy = {
   icon_url?: string | null;
   source?: string | null;
   updated_at?: string | null;
+  volume_24h?: number | null;
+  fees_24h?: number | null;
 };
 
 export type StrategiesResponse = {

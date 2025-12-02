@@ -88,6 +88,14 @@ class StrategyStorage:
         )
         return sorted_items[:limit]
 
+    def store_json(self, key: str, data: List[Dict], ttl: int | None = None) -> None:
+        """Сохранить список словарей как JSON в Redis."""
+        json_str = json.dumps(data)
+        if ttl:
+            self.redis.setex(key, ttl, json_str)
+        else:
+            self.redis.set(key, json_str)
+
 
 def compute_growth(
     storage: StrategyStorage,

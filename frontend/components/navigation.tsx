@@ -97,6 +97,29 @@ export function Navigation() {
           </svg>
           <span>AI Intelligence</span>
         </Link>
+
+        <Link 
+          href="/dashboard/aptos" 
+          className={`nav-item ${pathname === '/dashboard/aptos' ? 'nav-item-active' : ''}`}
+        >
+          <svg className="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+            <path d="M2 17l10 5 10-5M2 12l10 5 10-5"/>
+          </svg>
+          <span>Aptos DEX</span>
+        </Link>
+
+        <Link 
+          href="/pools" 
+          className={`nav-item ${pathname === '/pools' ? 'nav-item-active' : ''}`}
+        >
+          <svg className="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <circle cx="12" cy="12" r="10"/>
+            <path d="M12 2v20M2 12h20"/>
+            <circle cx="12" cy="12" r="3"/>
+          </svg>
+          <span>Pools</span>
+        </Link>
       </div>
     </div>
   );

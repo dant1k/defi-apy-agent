@@ -1,3 +1,5 @@
+"use client";
+
 import { ChangeEvent, useEffect, useMemo, useState, useRef } from "react";
 import dynamic from "next/dynamic";
 import type { AggregatedStrategy, FiltersState } from "./types";

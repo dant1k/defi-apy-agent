@@ -176,3 +176,4 @@ export function StrategyAlerts({ strategies, previousStrategies = [] }: Strategy
     </motion.div>
   );
 }
+

@@ -148,3 +148,4 @@ export function AutoRefresh({ onRefresh, interval = 120000, enabled = true }: Au
     </motion.div>
   );
 }
+

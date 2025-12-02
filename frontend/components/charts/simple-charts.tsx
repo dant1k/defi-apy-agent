@@ -130,3 +130,4 @@ export function SimpleCharts({ strategies }: SimpleChartsProps) {
     </motion.div>
   );
 }
+

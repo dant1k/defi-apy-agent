@@ -128,3 +128,4 @@ export function StrategySearch({ strategies, onStrategySelect }: StrategySearchP
     </motion.div>
   );
 }
+

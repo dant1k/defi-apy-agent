@@ -31,7 +31,7 @@ export default function DashboardClient() {
     const loadStrategies = async () => {
       try {
         setLoading(true);
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+        const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/\/$/, "") || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
         console.log('Loading strategies from:', apiUrl);
         
         // Try direct fetch first
