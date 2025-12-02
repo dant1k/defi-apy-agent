@@ -141,12 +141,6 @@ export default function StrategyDetailsPage() {
           <button className="px-4 py-2 text-sm font-medium text-white border-b-2 border-[var(--neonAqua)]">
             Analytics
           </button>
-          <button className="px-4 py-2 text-sm font-medium text-white/70 hover:text-white">
-            Deposit
-          </button>
-          <button className="px-4 py-2 text-sm font-medium text-white/70 hover:text-white">
-            Positions
-          </button>
         </div>
 
         <div className="grid gap-6 lg:grid-cols-[2fr,1fr]">
@@ -206,8 +200,8 @@ export default function StrategyDetailsPage() {
             </div>
 
             {/* Chart */}
-            <div className="h-64">
-              <ResponsiveContainer width="100%" height="100%">
+            <div className="h-64 w-full">
+              <ResponsiveContainer width="100%" height="100%" minHeight={256}>
                 <BarChart data={chartData}>
                   <XAxis
                     dataKey="date"

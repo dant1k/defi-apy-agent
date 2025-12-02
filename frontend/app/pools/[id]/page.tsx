@@ -125,12 +125,6 @@ export default function PoolDetailsPage() {
           <button className="px-4 py-2 text-sm font-medium text-white border-b-2 border-[var(--neonAqua)]">
             Analytics
           </button>
-          <button className="px-4 py-2 text-sm font-medium text-white/70 hover:text-white">
-            Deposit
-          </button>
-          <button className="px-4 py-2 text-sm font-medium text-white/70 hover:text-white">
-            Positions
-          </button>
         </div>
 
         <div className="grid gap-6 lg:grid-cols-[2fr,1fr]">
