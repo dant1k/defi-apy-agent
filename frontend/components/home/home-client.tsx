@@ -13,10 +13,7 @@ const StrategiesPanel = dynamic(() => import("./strategies-panel"), {
 
 // Get API base URL from environment variable (set during build time)
 // This must be set in .env file and frontend must be rebuilt
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/\/$/, "") || 
-  (typeof window !== 'undefined' 
-    ? `${window.location.protocol}//${window.location.hostname}:8000`
-    : 'http://localhost:8000');
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/\/$/, "") ?? "";
 
 export function HomeClient(): JSX.Element {
   const [chains, setChains] = useState<string[]>([]);
