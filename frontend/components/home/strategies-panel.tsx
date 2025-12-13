@@ -869,10 +869,13 @@ function SearchableSelect({ value, onChange, options, placeholder, searchPlaceho
 
   const selectedOption = options.find(option => option.value === value);
 
-  // Фильтруем опции по поисковому запросу
-  const filteredOptions = options.filter(option =>
-    option.label.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  // Фильтруем опции по поисковому запросу (ищем и по label, и по value)
+  const filteredOptions = options.filter(option => {
+    const query = searchQuery.toLowerCase();
+    const labelMatch = option.label.toLowerCase().includes(query);
+    const valueMatch = option.value.toLowerCase().includes(query);
+    return labelMatch || valueMatch;
+  });
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
