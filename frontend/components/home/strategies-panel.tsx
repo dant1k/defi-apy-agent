@@ -146,6 +146,7 @@ export default function StrategiesPanel({ apiBaseUrl, chains, protocols, tokens 
               }))
             ]}
             placeholder="Выберите сеть"
+            apiBaseUrl={apiBaseUrl}
           />
         </div>
 
@@ -163,6 +164,7 @@ export default function StrategiesPanel({ apiBaseUrl, chains, protocols, tokens 
               }))
             ]}
             placeholder="Выберите протокол"
+            apiBaseUrl={apiBaseUrl}
           />
         </div>
 
@@ -180,6 +182,7 @@ export default function StrategiesPanel({ apiBaseUrl, chains, protocols, tokens 
               }))
             ]}
             placeholder="Выберите токен"
+            apiBaseUrl={apiBaseUrl}
           />
         </div>
 
@@ -238,6 +241,7 @@ export default function StrategiesPanel({ apiBaseUrl, chains, protocols, tokens 
           total={rows.length}
           onSelect={(item) => setSelectedStrategy(item)}
           getChainIconUrl={getChainIconUrl}
+          apiBaseUrl={apiBaseUrl}
         />
       )}
 
@@ -257,11 +261,13 @@ function StrategyTable({
   total,
   onSelect,
   getChainIconUrl,
+  apiBaseUrl,
 }: {
   strategies: AggregatedStrategy[];
   total: number;
   onSelect: (strategy: AggregatedStrategy) => void;
   getChainIconUrl: (name: string) => string;
+  apiBaseUrl?: string;
 }): JSX.Element {
   return (
     <div className="strategy-table">
@@ -318,7 +324,7 @@ function StrategyTable({
               </td>
               <td>
                 <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
-                  <img src={getChainIconUrl(strategy.chain)} alt="" width={16} height={16} loading="lazy" onError={(e) => ((e.currentTarget.style.display = "none"))} />
+                  <IconWithFallback src={getChainIconUrl(strategy.chain)} alt="" width={16} height={16} apiBaseUrl={apiBaseUrl} />
                   {formatLabel(strategy.chain)}
                 </span>
               </td>
@@ -360,18 +366,24 @@ type IconWithFallbackProps = {
   width?: number;
   height?: number;
   className?: string;
+  apiBaseUrl?: string;
 };
 
-function IconWithFallback({ src, alt, width = 18, height = 18, className }: IconWithFallbackProps) {
+function IconWithFallback({ src, alt, width = 18, height = 18, className, apiBaseUrl }: IconWithFallbackProps) {
   const [currentSrc, setCurrentSrc] = useState(src);
   const [hasError, setHasError] = useState(false);
 
   const handleError = () => {
     if (!hasError && currentSrc.startsWith('/icons/')) {
       // Если локальная иконка не найдена, пробуем через бекенд
-      const backendSrc = currentSrc.replace('/icons/', 'http://localhost:8000/icons/');
-      setCurrentSrc(backendSrc);
-      setHasError(true);
+      if (apiBaseUrl) {
+        const backendSrc = currentSrc.replace('/icons/', `${apiBaseUrl}/icons/`);
+        setCurrentSrc(backendSrc);
+        setHasError(true);
+      } else {
+        // Если apiBaseUrl не передан, скрываем иконку
+        setCurrentSrc('');
+      }
     } else {
       // Скрываем иконку, если и бекенд не помог
       setCurrentSrc('');
@@ -407,9 +419,10 @@ type CustomSelectProps = {
   onChange: (value: string) => void;
   options: SelectOption[];
   placeholder?: string;
+  apiBaseUrl?: string;
 };
 
-function CustomSelect({ value, onChange, options, placeholder }: CustomSelectProps) {
+function CustomSelect({ value, onChange, options, placeholder, apiBaseUrl }: CustomSelectProps) {
   const [isOpen, setIsOpen] = useState(false);
   const selectRef = useRef<HTMLDivElement>(null);
 
@@ -439,6 +452,7 @@ function CustomSelect({ value, onChange, options, placeholder }: CustomSelectPro
               alt="" 
               width={18} 
               height={18}
+              apiBaseUrl={apiBaseUrl}
             />
           )}
           <span>{selectedOption?.label || placeholder}</span>
@@ -463,6 +477,7 @@ function CustomSelect({ value, onChange, options, placeholder }: CustomSelectPro
                   alt="" 
                   width={18} 
                   height={18}
+                  apiBaseUrl={apiBaseUrl}
                 />
               )}
               <span>{option.label}</span>
