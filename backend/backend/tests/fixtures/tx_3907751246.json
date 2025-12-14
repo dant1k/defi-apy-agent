@@ -1,0 +1,142 @@
+{
+  "transaction_version": 3907751246,
+  "dex_slug": "hyperion",
+  "timestamp": "2025-12-14T08:44:35.269797",
+  "activities": [
+    {
+      "event_index": -1,
+      "owner_address": "0x918027a5378486e8a8fe791a25df9b5831435900c7e0120c578da08b964fb640",
+      "asset_type": "0x1::aptos_coin::AptosCoin",
+      "type": "0x1::aptos_coin::GasFeeEvent",
+      "amount": 6363,
+      "transaction_version": 3907751246
+    },
+    {
+      "event_index": 0,
+      "owner_address": "0x918027a5378486e8a8fe791a25df9b5831435900c7e0120c578da08b964fb640",
+      "asset_type": "0x000000000000000000000000000000000000000000000000000000000000000a",
+      "type": "0x1::fungible_asset::Withdraw",
+      "amount": 17777777777,
+      "transaction_version": 3907751246
+    },
+    {
+      "event_index": 3,
+      "owner_address": "0x53e2555324ecbcf9cc400ed61367d7eec98adb2257e5dc076049a5f9446454d8",
+      "asset_type": "0x000000000000000000000000000000000000000000000000000000000000000a",
+      "type": "0x1::fungible_asset::Deposit",
+      "amount": 888888,
+      "transaction_version": 3907751246
+    },
+    {
+      "event_index": 4,
+      "owner_address": "0xd577798e58fd2d66f48622733c513b93dd84fdf7c26cf639dad15296a411c4eb",
+      "asset_type": "0x000000000000000000000000000000000000000000000000000000000000000a",
+      "type": "0x1::fungible_asset::Deposit",
+      "amount": 888889,
+      "transaction_version": 3907751246
+    },
+    {
+      "event_index": 7,
+      "owner_address": "0x18269b1090d668fbbc01902fa6a5ac6e75565d61860ddae636ac89741c883cbc",
+      "asset_type": "0x000000000000000000000000000000000000000000000000000000000000000a",
+      "type": "0x1::fungible_asset::Deposit",
+      "amount": 17776000000,
+      "transaction_version": 3907751246
+    },
+    {
+      "event_index": 8,
+      "owner_address": "0x18269b1090d668fbbc01902fa6a5ac6e75565d61860ddae636ac89741c883cbc",
+      "asset_type": "0x357b0b74bc833e95a115ad22604854d6b0fca151cecd94111770e5d6ffc9dc2b",
+      "type": "0x1::fungible_asset::Withdraw",
+      "amount": 300077439,
+      "transaction_version": 3907751246
+    },
+    {
+      "event_index": 12,
+      "owner_address": "0x918027a5378486e8a8fe791a25df9b5831435900c7e0120c578da08b964fb640",
+      "asset_type": "0x357b0b74bc833e95a115ad22604854d6b0fca151cecd94111770e5d6ffc9dc2b",
+      "type": "0x1::fungible_asset::Deposit",
+      "amount": 300077439,
+      "transaction_version": 3907751246
+    }
+  ],
+  "analysis": {
+    "total_activities": 7,
+    "owner_assets_summary": {
+      "0x918027a5378486e8a8fe791a25df9b5831435900c7e0120c578da08b964fb640:0x1::aptos_coin::AptosCoin": {
+        "owner": "0x918027a5378486e8a8fe791a25df9b5831435900c7e0120c578da08b964fb640",
+        "asset_type": "0x1::aptos_coin::AptosCoin",
+        "total_amount": 6363,
+        "activity_count": 1
+      },
+      "0x918027a5378486e8a8fe791a25df9b5831435900c7e0120c578da08b964fb640:0x000000000000000000000000000000000000000000000000000000000000000a": {
+        "owner": "0x918027a5378486e8a8fe791a25df9b5831435900c7e0120c578da08b964fb640",
+        "asset_type": "0x000000000000000000000000000000000000000000000000000000000000000a",
+        "total_amount": 17777777777,
+        "activity_count": 1
+      },
+      "0x53e2555324ecbcf9cc400ed61367d7eec98adb2257e5dc076049a5f9446454d8:0x000000000000000000000000000000000000000000000000000000000000000a": {
+        "owner": "0x53e2555324ecbcf9cc400ed61367d7eec98adb2257e5dc076049a5f9446454d8",
+        "asset_type": "0x000000000000000000000000000000000000000000000000000000000000000a",
+        "total_amount": 888888,
+        "activity_count": 1
+      },
+      "0xd577798e58fd2d66f48622733c513b93dd84fdf7c26cf639dad15296a411c4eb:0x000000000000000000000000000000000000000000000000000000000000000a": {
+        "owner": "0xd577798e58fd2d66f48622733c513b93dd84fdf7c26cf639dad15296a411c4eb",
+        "asset_type": "0x000000000000000000000000000000000000000000000000000000000000000a",
+        "total_amount": 888889,
+        "activity_count": 1
+      },
+      "0x18269b1090d668fbbc01902fa6a5ac6e75565d61860ddae636ac89741c883cbc:0x000000000000000000000000000000000000000000000000000000000000000a": {
+        "owner": "0x18269b1090d668fbbc01902fa6a5ac6e75565d61860ddae636ac89741c883cbc",
+        "asset_type": "0x000000000000000000000000000000000000000000000000000000000000000a",
+        "total_amount": 17776000000,
+        "activity_count": 1
+      },
+      "0x18269b1090d668fbbc01902fa6a5ac6e75565d61860ddae636ac89741c883cbc:0x357b0b74bc833e95a115ad22604854d6b0fca151cecd94111770e5d6ffc9dc2b": {
+        "owner": "0x18269b1090d668fbbc01902fa6a5ac6e75565d61860ddae636ac89741c883cbc",
+        "asset_type": "0x357b0b74bc833e95a115ad22604854d6b0fca151cecd94111770e5d6ffc9dc2b",
+        "total_amount": 300077439,
+        "activity_count": 1
+      },
+      "0x918027a5378486e8a8fe791a25df9b5831435900c7e0120c578da08b964fb640:0x357b0b74bc833e95a115ad22604854d6b0fca151cecd94111770e5d6ffc9dc2b": {
+        "owner": "0x918027a5378486e8a8fe791a25df9b5831435900c7e0120c578da08b964fb640",
+        "asset_type": "0x357b0b74bc833e95a115ad22604854d6b0fca151cecd94111770e5d6ffc9dc2b",
+        "total_amount": 300077439,
+        "activity_count": 1
+      }
+    },
+    "fee_candidates": [
+      {
+        "owner": "0x918027a5378486e8a8fe791a25df9b5831435900c7e0120c578da08b964fb640",
+        "asset_type": "0x1::aptos_coin::AptosCoin",
+        "amount": 6363,
+        "reason": "Small positive amount to non-pool address"
+      },
+      {
+        "owner": "0x53e2555324ecbcf9cc400ed61367d7eec98adb2257e5dc076049a5f9446454d8",
+        "asset_type": "0x000000000000000000000000000000000000000000000000000000000000000a",
+        "amount": 888888,
+        "reason": "Small positive amount to non-pool address"
+      },
+      {
+        "owner": "0xd577798e58fd2d66f48622733c513b93dd84fdf7c26cf639dad15296a411c4eb",
+        "asset_type": "0x000000000000000000000000000000000000000000000000000000000000000a",
+        "amount": 888889,
+        "reason": "Small positive amount to non-pool address"
+      },
+      {
+        "owner": "0x18269b1090d668fbbc01902fa6a5ac6e75565d61860ddae636ac89741c883cbc",
+        "asset_type": "0x357b0b74bc833e95a115ad22604854d6b0fca151cecd94111770e5d6ffc9dc2b",
+        "amount": 300077439,
+        "reason": "Small positive amount to non-pool address"
+      },
+      {
+        "owner": "0x918027a5378486e8a8fe791a25df9b5831435900c7e0120c578da08b964fb640",
+        "asset_type": "0x357b0b74bc833e95a115ad22604854d6b0fca151cecd94111770e5d6ffc9dc2b",
+        "amount": 300077439,
+        "reason": "Small positive amount to non-pool address"
+      }
+    ]
+  }
+}

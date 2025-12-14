@@ -1,0 +1,22 @@
+#!/bin/bash
+# Команды для выполнения на сервере 46.224.99.147
+
+echo "🔧 Команды для исправления API URL на сервере"
+echo ""
+echo "Скопируй и выполни эти команды на сервере:"
+echo ""
+echo "cd /opt/defi-apy-agent"
+echo ""
+echo "# Обновить переменные окружения"
+echo "sed -i 's|NEXT_PUBLIC_API_URL=.*|NEXT_PUBLIC_API_URL=http://46.224.99.147:8000|g' .env"
+echo "sed -i 's|NEXT_PUBLIC_API_BASE_URL=.*|NEXT_PUBLIC_API_BASE_URL=http://46.224.99.147:8000|g' .env"
+echo ""
+echo "# Если переменных нет, добавить"
+echo "if ! grep -q 'NEXT_PUBLIC_API_URL' .env; then echo 'NEXT_PUBLIC_API_URL=http://46.224.99.147:8000' >> .env; fi"
+echo "if ! grep -q 'NEXT_PUBLIC_API_BASE_URL' .env; then echo 'NEXT_PUBLIC_API_BASE_URL=http://46.224.99.147:8000' >> .env; fi"
+echo ""
+echo "# Пересобрать и перезапустить frontend"
+echo "docker-compose build frontend"
+echo "docker-compose up -d --force-recreate frontend"
+echo ""
+echo "✅ После выполнения подожди 1-2 минуты и обнови страницу"
