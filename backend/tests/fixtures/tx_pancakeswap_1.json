@@ -1,0 +1,63 @@
+{
+  "transaction_version": 3907723400,
+  "dex_slug": "pancakeswap-amm",
+  "timestamp": "2025-12-14T10:00:00.000000",
+  "activities": [
+    {
+      "event_index": 0,
+      "owner_address": "0xc7efb4076dbe143cbcd98cfaaa929ecfc8f299203dfff63b95ccb6bfeab94f9",
+      "asset_type": "0x1::aptos_coin::AptosCoin",
+      "type": "deposit",
+      "amount": "100000000000",
+      "transaction_version": 3907723400
+    },
+    {
+      "event_index": 1,
+      "owner_address": "0xc7efb4076dbe143cbcd98cfaaa929ecfc8f299203dfff63b95ccb6bfeab94f9",
+      "asset_type": "0xf22bede237a07e121b56d91a491eb7bcdfd1f5907926a9e58338f964a02b1f6d::asset::USDC",
+      "type": "withdraw",
+      "amount": "95000000000",
+      "transaction_version": 3907723400
+    },
+    {
+      "event_index": 2,
+      "owner_address": "0x5c738e5b8e8b8e8b8e8b8e8b8e8b8e8b8e8b8e8b8e8b8e8b8e8b8e8b8e8b8e",
+      "asset_type": "0x1::aptos_coin::AptosCoin",
+      "type": "deposit",
+      "amount": "250000000",
+      "transaction_version": 3907723400
+    }
+  ],
+  "analysis": {
+    "total_activities": 3,
+    "owner_assets_summary": {
+      "pool:aptos": {
+        "owner": "0xc7efb4076dbe143cbcd98cfaaa929ecfc8f299203dfff63b95ccb6bfeab94f9",
+        "asset_type": "0x1::aptos_coin::AptosCoin",
+        "total_amount": 100000000000,
+        "activity_count": 1
+      },
+      "pool:usdc": {
+        "owner": "0xc7efb4076dbe143cbcd98cfaaa929ecfc8f299203dfff63b95ccb6bfeab94f9",
+        "asset_type": "0xf22bede237a07e121b56d91a491eb7bcdfd1f5907926a9e58338f964a02b1f6d::asset::USDC",
+        "total_amount": -95000000000,
+        "activity_count": 1
+      },
+      "fee_recipient:aptos": {
+        "owner": "0x5c738e5b8e8b8e8b8e8b8e8b8e8b8e8b8e8b8e8b8e8b8e8b8e8b8e8b8e8b8e",
+        "asset_type": "0x1::aptos_coin::AptosCoin",
+        "total_amount": 250000000,
+        "activity_count": 1
+      }
+    },
+    "fee_candidates": [
+      {
+        "owner": "0x5c738e5b8e8b8e8b8e8b8e8b8e8b8e8b8e8b8e8b8e8b8e8b8e8b8e8b8e8b8e",
+        "asset_type": "0x1::aptos_coin::AptosCoin",
+        "amount": 250000000,
+        "reason": "Small positive amount to non-pool address"
+      }
+    ]
+  }
+}
+

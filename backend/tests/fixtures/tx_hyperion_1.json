@@ -1,0 +1,63 @@
+{
+  "transaction_version": 3907723500,
+  "dex_slug": "hyperion",
+  "timestamp": "2025-12-14T11:00:00.000000",
+  "activities": [
+    {
+      "event_index": 0,
+      "owner_address": "0xuser123...",
+      "asset_type": "0x1::aptos_coin::AptosCoin",
+      "type": "withdraw",
+      "amount": "-100000000000",
+      "transaction_version": 3907723500
+    },
+    {
+      "event_index": 1,
+      "owner_address": "0xuser123...",
+      "asset_type": "0xf22bede237a07e121b56d91a491eb7bcdfd1f5907926a9e58338f964a02b1f6d::asset::USDC",
+      "type": "deposit",
+      "amount": "95000000000",
+      "transaction_version": 3907723500
+    },
+    {
+      "event_index": 2,
+      "owner_address": "0xhyperion_pool...",
+      "asset_type": "0x1::aptos_coin::AptosCoin",
+      "type": "deposit",
+      "amount": "250000000",
+      "transaction_version": 3907723500
+    }
+  ],
+  "analysis": {
+    "total_activities": 3,
+    "owner_assets_summary": {
+      "user:aptos_out": {
+        "owner": "0xuser123...",
+        "asset_type": "0x1::aptos_coin::AptosCoin",
+        "total_amount": -100000000000,
+        "activity_count": 1
+      },
+      "user:usdc_in": {
+        "owner": "0xuser123...",
+        "asset_type": "0xf22bede237a07e121b56d91a491eb7bcdfd1f5907926a9e58338f964a02b1f6d::asset::USDC",
+        "total_amount": 95000000000,
+        "activity_count": 1
+      },
+      "pool:fee": {
+        "owner": "0xhyperion_pool...",
+        "asset_type": "0x1::aptos_coin::AptosCoin",
+        "total_amount": 250000000,
+        "activity_count": 1
+      }
+    },
+    "fee_candidates": [
+      {
+        "owner": "0xhyperion_pool...",
+        "asset_type": "0x1::aptos_coin::AptosCoin",
+        "amount": 250000000,
+        "reason": "Small deposit to pool (not user) - this is fee"
+      }
+    ]
+  }
+}
+

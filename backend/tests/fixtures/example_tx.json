@@ -1,0 +1,63 @@
+{
+  "transaction_version": 123456789,
+  "dex_slug": "pancakeswap-amm",
+  "timestamp": "2025-12-13T22:00:00.000000",
+  "activities": [
+    {
+      "event_index": 0,
+      "owner_address": "0x123...pool",
+      "asset_type": "0x1::aptos_coin::AptosCoin",
+      "type": "deposit",
+      "amount": "1000000000",
+      "transaction_version": 123456789
+    },
+    {
+      "event_index": 1,
+      "owner_address": "0x123...pool",
+      "asset_type": "0x2::coin::Coin<0x456::usdc::USDC>",
+      "type": "withdraw",
+      "amount": "950000000",
+      "transaction_version": 123456789
+    },
+    {
+      "event_index": 2,
+      "owner_address": "0x789...fee_recipient",
+      "asset_type": "0x1::aptos_coin::AptosCoin",
+      "type": "deposit",
+      "amount": "5000000",
+      "transaction_version": 123456789
+    }
+  ],
+  "analysis": {
+    "total_activities": 3,
+    "owner_assets_summary": {
+      "0x123...pool:0x1::aptos_coin::AptosCoin": {
+        "owner": "0x123...pool",
+        "asset_type": "0x1::aptos_coin::AptosCoin",
+        "total_amount": 1000000000,
+        "activity_count": 1
+      },
+      "0x123...pool:0x2::coin::Coin<0x456::usdc::USDC>": {
+        "owner": "0x123...pool",
+        "asset_type": "0x2::coin::Coin<0x456::usdc::USDC>",
+        "total_amount": -950000000,
+        "activity_count": 1
+      },
+      "0x789...fee_recipient:0x1::aptos_coin::AptosCoin": {
+        "owner": "0x789...fee_recipient",
+        "asset_type": "0x1::aptos_coin::AptosCoin",
+        "total_amount": 5000000,
+        "activity_count": 1
+      }
+    },
+    "fee_candidates": [
+      {
+        "owner": "0x789...fee_recipient",
+        "asset_type": "0x1::aptos_coin::AptosCoin",
+        "amount": 5000000,
+        "reason": "Small positive amount to non-pool address"
+      }
+    ]
+  }
+}
+
